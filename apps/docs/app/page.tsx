@@ -34,7 +34,6 @@ export default async function Page() {
             title: "Get Started",
           },
         ]}
-        image="https://res.cloudinary.com/dfzftvkli/image/upload/v1686096583/search-api-graphic2.webp"
       >
         Algolia is a platform for building powerful end-to-end search and
         discovery solutions.
