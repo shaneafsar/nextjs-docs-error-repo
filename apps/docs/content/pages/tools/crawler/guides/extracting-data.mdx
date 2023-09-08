@@ -1,0 +1,115 @@
+---
+navigation: "default"
+
+title: |-
+  Extracting data
+description: |-
+  Learn how to extract data with the Algolia Crawler.
+slug: tools/crawler/guides/extracting-data
+---
+
+
+This page provides an overview of the Crawler's extraction process. We'll cover how pages are selected and processed, and how records are extracted from those pages.
+
+
+## Processing a page
+
+To understand extraction, it is important to first understand how pages are processed by the Crawler.
+
+Pages are processed in five main steps:
+1. A page is fetched.
+2. Links and records are extracted from the page.
+3. The extracted records are indexed to Algolia.
+4. The extracted links are added to the Crawler's URL database.
+5. For each new, non-excluded page added to the database, the process is repeated.
+
+## Adding a page
+
+When a crawl starts, your crawler adds all the URLs stored in the following parameters to its URL database:
+- [`startUrls`](/tools/crawler/apis/configuration/startUrls)
+- [`sitemaps`](/tools/crawler/apis/configuration/sitemaps)
+- [`extraUrls`](/tools/crawler/apis/configuration/extraUrls)
+
+For each of these pages, your crawler fetches linked pages. It looks for links in any of the following formats:
+- `head > link[rel=alternate]`
+- `a[href]`
+- `iframe[src]`
+- `area[href]`
+- `head > link[rel=canonical]`
+- redirect target when HTTP code is `301` or `302`
+
+However, not all links that match are added. There are a number of reasons [why a page might be skipped/ignored](/tools/crawler/troubleshooting/faq#when-are-pages-skipped-or-ignored).
+
+If a page is not ignored, its content is extracted.
+
+## Extracting records
+
+Pages are extracted by a [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor). These extractors are assigned to actions via the `recordExtractor` parameter. This parameter links to a function that returns the data you want to index, organized in a array of JSON objects.
+
+### Anatomy of a recordExtractor
+
+```js
+recordExtractor: ({ url, $, contentLength, fileType }) => {
+     return [
+          {
+              url: url.href,
+              title: $("head > title").text(),
+              description: $("meta[name=description]").attr("content"),
+              type: $('meta[property="og:type"]').attr("content"),
+          }
+     ];
+}
+```
+
+### Extraction function
+
+`recordExtractor` is a custom function that take a website's metadata, HTML (and [potentially external data](/tools/crawler/guides/enriching-extraction-with-external-data)), and returns an array of JSON objects.
+
+#### Parameters
+
+This function receives an object with several properties to help you build your final records:
+1. [`actions#$`](/tools/crawler/apis/configuration/actions#$): A [Cheerio instance](https://cheerio.js.org/) that contains the crawled website's content (we will go over what this means in the [extracting a site's content section](#extracting-a-sites-content)).
+2. [`actions#url`](/tools/crawler/apis/configuration/actions#url): A [Location](https://developer.mozilla.org/en-US/docs/Web/API/Location) object that contains the URL of the page being crawled.
+3. [`actions#filetype`](/tools/crawler/apis/configuration/actions#filetype): the file type of the webpage (`html`, `pdf`, etc.).
+5. [`actions#contentlength`](/tools/crawler/apis/configuration/actions#contentlength): the length of the webpage's content.
+6. [`actions#datasources`](/tools/crawler/apis/configuration/actions#datasources): the external data sets that you've declared in your crawler and want to combine with your extraction data.
+7. [`actions#helpers`](/tools/crawler/apis/configuration/actions#helpers): a collection of functions to help you extract content and generate records.
+
+`url`, `fileType`, and `contentLength` provide useful metadata on the page you are crawling. However, to extract content from your webpages, you need to use the Cheerio instance (`$`).
+
+#### Return structure
+
+The JSON objects returned by your `recordExtractor` are directly converted into a record in your Algolia index.
+
+<Callout type="info">
+  They can contain any type of value as long as they are compatible with an [Algolia record](/guides/sending-and-managing-data/prepare-your-data/#algolia-records).
+However, their size must be lower than 500 KB each, and you can return a maximum of 200 records per crawled URL.
+</Callout>
+
+### Extracting a site's content
+
+Website content is accessible through a `recordExtractor`'s [Cheerio instance (`$`) parameter](https://cheerio.js.org/). Cheerio is "a lean implementation of core jQuery designed specifically for the server". Checkout [Cheerio's documentation](https://github.com/cheeriojs/cheerio#api) for examples, syntax, and guidance.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>
+
+## Extracting from JavaScript based sites
+
+You can also use your crawler on JavaScript-based websites. To do this, set [`renderJavaScript`](/tools/crawler/apis/configuration/renderJavaScript) to `true` in your crawler's configuration file.
+
+<Callout type="warning">
+  Setting `renderJavaScript` to `true` makes the crawling process a lot slower, so you have the possibility to use it for only a subset of your website.
+</Callout>
+
+## Extracting data from non-HTML documents
+
+You can use Crawler to index documents (such as `.pdf`'s and `.doc`'s). Documents are transformed into HTML by a dedicated [Tika Server](https://tika.apache.org/).
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>

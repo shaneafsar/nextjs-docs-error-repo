@@ -1,0 +1,113 @@
+---
+navigation: "cli"
+title: |-
+  algolia rules
+description: |-
+  Manage your Algolia rules
+slug: tools/cli/commands/algolia-rules
+---
+
+## algolia rules browse
+
+List all the rules of an index
+
+### Usage
+
+`algolia rules browse <index> [flags]`
+
+### Examples
+
+List all the rules of the "MOVIES" index
+
+```sh command="algolia rules browse MOVIES"
+algolia rules browse MOVIES
+```
+
+List all the rules of the "MOVIES" index and save them to a 'rules.ndjson' file
+
+```sh
+algolia rules browse MOVIES --json > rules.ndjson
+```
+
+### Output formatting flags
+
+- `--allow-missing-template-keys`: If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.
+
+- `-o`, `--output`: Output format. One of: (json, jsonpath, jsonpath-as-json, jsonpath-file).
+
+- `--template`: Template string or path to template file to use when --output=jsonpath, --output=jsonpath-file.
+
+## algolia rules delete
+
+Delete rules from an index
+
+### Usage
+
+`algolia rules delete <index> --rule-ids <rule-ids> --confirm [flags]`
+
+### Examples
+
+Delete one single rule with the ID "1" from the "MOVIES" index
+
+```sh
+algolia rules delete TEST_PRODUCTS_1 --rule-ids 1
+```
+
+Delete multiple rules with the IDs "1" and "2" from the "MOVIES" index
+
+```sh
+algolia rules delete MOVIES --rule-ids 1,2
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+- `--forward-to-replicas`: Forward the delete request to the replicas
+
+- `--rule-ids`: Rule IDs to delete
+
+## algolia rules import
+
+Import rules to the specified index
+
+### Usage
+
+`algolia rules import <index> -F <file> [flags]`
+
+### Examples
+
+Import rules from the "rules.ndjson" file to the "MOVIES" index
+
+```sh
+algolia rules import MOVIES -F rules.ndjson
+```
+
+Import rules from the standard input to the "MOVIES" index
+
+```sh
+cat rules.ndjson | algolia rules import MOVIES -F -
+```
+
+Browse the rules in the "MOVIES_staging" index and import them to the "MOVIES" index
+
+```sh
+algolia rules browse MOVIES_staging | algolia rules import MOVIES -F -
+```
+
+Import rules from the "rules.ndjson" file to the "MOVIES" index and don't forward them to the index replicas
+
+```sh
+algolia import MOVIES -F rules.ndjson -f=false
+```
+
+### Flags
+
+- `-c`, `--clear-existing-rules`: Clear existing rules before importing new ones
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+- `-F`, `--file`: Read rules to import from `file` (use "-" to read from standard input)
+
+- `-f`, `--forward-to-replicas`: Forward the rules to the index replicas
+

@@ -1,0 +1,90 @@
+---
+navigation: "crawler"
+
+title: |-
+  Add CSV data to your extracted records
+description: |-
+  How to expose a Google spreadsheet as a CSV file and add this data to your extracted records.
+slug: tools/crawler/guides/enriching-extraction-with-external-data/how-to/expose-google-spreadsheet-as-csv
+---
+
+
+You may wish to add offline data to the web content you are extracting. With the Crawler, you can do this in just three steps:
+1. Upload your data to Google Sheets.
+2. Publish your spreadsheet online as a CSV.
+3. Link the published CSV in your crawler's configuration.
+
+## Prerequisites
+
+Ensure that your spreadsheet's format is compatible with the crawler:
+- It must contain headers.
+- One of the headers must be `url` (the `url` column should contain all URLs that you want to add external data to).
+
+## Upload your data to Google Sheets
+
+The first step is to upload your data to Google Sheets. This is highly dependent on the format and storage of your data, but the example uses [this Google spreadsheet](https://docs.google.com/spreadsheets/d/1hkpL4yL5lmUajzpqs_MQqKnU3MBL3VQT1WLegNy76y8/edit?usp=sharing).
+
+## Publish your spreadsheet online
+
+1\. Click on the **Share** button of your Google spreadsheet.
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-1.png" alt="" />
+2\. Click on **Advanced**.
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-2.png" alt="" />
+3\. Change the spreadsheet's **Sharing settings** so that the file is accessible to anyone who has the **sharing link**.
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-3.png" alt="" />
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-4.png" alt="" />
+4\. Publish your spreadsheet to the web as a CSV file. To do this, click on the **File** menu, then **Publish to the web**
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-5.png" alt="" />
+5\. Set the link type to **Comma-separated values (.csv)**.
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-6.png" alt="" />
+6\. The generated URL is the address used to access your CSV file.
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-7.png" alt="" />
+
+### Enabling automatic updates
+
+The CSV file is generated with the current data of your Google spreadsheet. **By default, all further updates to your spreadsheet changes the content accessed through the link.**
+
+If you want to disable automatic updating, open the **Published Content & settings** section and uncheck
+**Automatically republish when changes are made**.
+
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-export-8.png" alt="" />
+
+## Link your published CSV to your crawler's configuration
+
+### Create your external data source
+
+Creating an external data source allows the Crawler to handle and manage your CSV file, and make it available for the crawler's configuration.
+1. Go to [Crawler Admin](https://crawler.algolia.com/), and click the **External Data** tab.
+2. Click on **New External Data source**
+3. Fill in the form by choosing a unique name, for example 'myCSV', selecting the type CSV and filling in the URL.
+<Media type="image" id="tools/crawler/guides/expose-google-spreadsheet-as-csv/csv-creation.png" alt="" />
+4. Click on create to finish
+5. To manually test if the setup is correct, go to the **Explore Data** page by clicking the "looking glass" icon on the right.
+6. Trigger a manual refresh with the **Refresh Data** button and verify that you get the right number of rows extracted.
+
+### Reference the External Data in the crawler's configuration
+
+In this step, you'll edit your crawler's `recordExtractor` so that it integrates metrics from the published CSV into the crawler produced records.
+1. Go to [Crawler Admin](https://crawler.algolia.com/), select your crawler, and click the **Editor** tab.
+2. Add the [`externalData`](/tools/crawler/apis/configuration/externalData) parameter to your crawler. You can insert it right before the actions parameter.
+```js
+externalData: ['myCSV']
+```
+*Note: the crawler only keeps data from URLs that match the **startUrls**, **extraUrls** or the **pathsToMatch** properties of your crawler's configuration.*
+3. Edit the [`actions#dataSources`](/tools/crawler/apis/configuration/actions#dataSources) parameter of your [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor) to read values from the external data source you just defined, and store them as attributes for your resulting record.
+```js
+recordExtractor: ({ url, dataSources }) => [
+  {
+    objectID: url.href,
+    pageviews: dataSources.myCSV.pageviews,
+    category: dataSources.myCSV.category,
+    // There is no boolean type in CSV, so here the string is converted into a boolean
+    onsale: dataSources.myCSV.onsale === 'true',
+  },
+]
+```
+4. In the **Test URL** field of the editor, type the URL of a page with CSV data attached to it.
+5. Click on **Run test**.
+6. You should see the data coming from your CSV in the generated record.
+
+If this doesn't work as expected, use the **External data** tab to check that the URL is indexed and matches the stored URL (for example there could be a missing trailing `/`).

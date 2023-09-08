@@ -1,0 +1,116 @@
+---
+navigation: "default"
+
+title: |-
+  Linking Google Analytics
+description: |-
+  Linking Google Analytics to Algolia's Crawler.
+slug: tools/crawler/guides/enriching-extraction-with-external-data/how-to/linking-google-analytics
+---
+
+
+Analytics can be used to enrich the records you extract from a website. By boosting search results based on their popularity (or another metric tracked by Google Analytics), you can improve the relevance of your website's search.
+
+With a little bit of configuration, your crawler can fetch Google Analytics metrics automatically and regularly.
+
+**Here's a brief overview of the required steps:**
+
+1. Have the administrator of your Google Analytics account **provide read access** to the email address of the Google Account you want to use (personal account or service account).
+2. Create a new External Data source on the Crawler interface.
+3. Verify that **your crawler can connect** to your Google Analytics view.
+4. Add your External Data unique name to the [`externalData`](/tools/crawler/apis/configuration/externalData) property.
+5. Edit your crawler's [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor) so that it integrates the metrics retrieved from Google Analytics into the output records (make sure this works as expected).
+
+## Optional: Create a service account
+
+If you don't want to link a personal account, you can create a [service account](https://cloud.google.com/iam/docs/service-accounts) on Google Cloud Platform.
+
+1. Create (or select an existing) project from [console.developers.google.com](https://console.developers.google.com).
+2. Activate the **Analytics Reporting API** in that project.
+3. In the **Credentials** section, create a new  Service account. You can skip the optional steps.
+4. Open the Service account and click on **Add key** -> **Create new key**. Select **JSON**, and download the resulting JSON file (you need this file in step 3).
+
+<Media type="image" id="tools/crawler/guides/ga-guide-service-account.png" alt="" />
+
+## Grant access to Google Analytics data
+
+This first step shows how an administrator of a Google Analytics account can give **read access** to your Google Account or a service account.
+
+Steps for an **administrator**:
+
+1. Log in to [Google Analytics](https://analytics.google.com/analytics/web).
+2. Select Account, Property, and then the View that contains the analytics for the website you are crawling.
+3. Go to the **Admin** tab.
+4. In the **View** panel (on the right side of the screen), click on **View User Management**.
+5. Click the **+** button, then click "Add users".
+6. Paste the email address of the Google Account you want to add.
+7. In the **Permissions** panel, make sure that only the "Read & Analyze" permission is enabled.
+8. Click the "Add" button to confirm.
+
+  <Media type="image" id="tools/crawler/guides/ga-guide-grant-access.png" alt="" />
+
+## Create the External Data
+
+1. Open the Crawler [interface](https://crawler.algolia.com/admin/external_data), and navigate to the **External Data** tab.
+2. Click on the button **New External Data source**
+3. Fill in the form:
+- App ID: Select the Application ID you want to associate the External Data with.
+- Unique name: The name use to reference to this External Data in your crawler's configuration (it's unique in the scope of your selected App ID).
+- External Data type: Select **Google Analytics**.
+- Connection Data: Authenticate with Google OAuth by clicking on **Sign in with Google**.
+  - __Note: If you want to use a [service account](#optional-create-a-service-account) you can click on the 'Sign in with email and private key instead' button.__
+- Views: Select 0 or more views to fetch data from. By default all available views are selected.
+- Metrics: Select one or more metrics to be fetched.
+- Collection period: The number of days before yesterday from which to gather data.
+- Sampling level: The level of precision of your analytics data (A large sample level takes more time to compute but take more sample into account (more precise)).
+
+<Media type="image" id="tools/crawler/guides/ga-creation.png" alt="" />
+
+## Test your External Data
+
+In this step, you will check that the Crawler is able to connect to your Google Analytics view.
+
+1. Return to the **External Data** tab.
+2. Click on the looking glass on the right of your External Data to go to the **Explore Data** page.
+3. Trigger a manual refresh with the **Refresh Data** button and verify that the extraction is successful by checking the **Status** on the rightmost column, if it's green it's all good.
+4. If an error appears, check your credentials if you choose to connect with a service account.
+
+## Update your crawler's configuration
+
+In this step, edit the configuration of your crawler to use the External Data you just created.
+
+1. Go to your [Crawler dashboard](https://crawler.algolia.com/), select your crawler, and click on the **Editor** tab.
+2. Add the unique name of the External Data to your [`externalData`](/tools/crawler/apis/configuration/externalData) property:
+  - `externalData: ['myGoogleAnalyticsData']`
+3. Save your changes.
+
+After saving your crawler's configuration, your Google Analytics metrics will be ready whenever you crawl your website. **Please note that you must crawl your website at least once before the metrics appear**. If an error occurs while fetching your analytics, it should be reported in less than one minute after the crawling process starts.
+
+## Integrate analytics into records
+
+In this step, you edit your `recordExtractor` so that it integrates metrics from Google Analytics into the records it produces.
+1. Go to your [Crawler Admin](https://crawler.algolia.com/), select your crawler, and go to the **Editor** tab.
+2. Read metric values from the external data source you've added beforehand, and store them as attributes for your resulting records. If Google Analytics has data for the current page, the associated metrics should be present in the [`actions#dataSources`](/tools/crawler/apis/configuration/actions#dataSources) parameter of your [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor):
+   ```js
+   {
+     // ...
+     recordExtractor: ({ url, dataSources }) => {
+       // "myAnalytics" must match one of the unique name defined in `externalData`
+       const pageviews = dataSources.myAnalytics['ga:uniquePageViews'];
+
+       return [
+         {
+           objectID: url.href,
+           pageviews,
+         },
+       ];
+     },
+   };
+   ```
+For a complete example, check the `recordExtractor` of the [sample Google Analytics crawler configuration](https://github.com/algolia/crawler-configurations-examples/blob/master/config.google-analytics.js).
+
+3. In the **Test a URL** field of the configuration editor (which you can find in the **Admin > Settings** tab), type the URL of a page with analytics attached to it.
+4. Click on **Run test**.
+5. When the test completes, click the **External data** tab. You should see the analytics data extracted from Google Analytics for that page.
+
+If this doesn't work as expected, try adding a trailing `/` to your URL, or test with another URL.

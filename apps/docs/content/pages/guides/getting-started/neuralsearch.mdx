@@ -1,0 +1,96 @@
+---
+navigation: "default"
+
+title: |-
+  NeuralSearch
+description: |-
+  NeuralSearch combines the precision of keyword matching with the deep understanding of natural language and contextual relevance provided by AI-based vector search.
+slug: guides/getting-started/neuralsearch
+---
+
+
+NeuralSearch combines the precision of keyword search with the deep understanding of natural language and contextual relevance provided by AI-based [vector search](https://www.algolia.com/blog/ai/what-is-vector-search/).
+On every keystroke, NeuralSearch performs a hybrid keyword and vector search,
+merges the results, and ranks them based on relevance so that searchers get fast and accurate results that align with their search intent.
+
+{/* Partial: panel/academy.haml */}
+
+
+## Prerequisites for NeuralSearch
+
+<Callout type="info">
+  NeuralSearch is available on the [**Elevate**](https://www.algolia.com/pricing/) plan.
+</Callout>
+
+Before you can use NeuralSearch, you must:
+
+- [Upload your data](/guides/sending-and-managing-data/send-and-update-your-data/).
+- [Send click and conversion events](/guides/sending-events/getting-started/) from your app or website to Algolia. NeuralSearch depends on user interactions to train the underlying language model for its vector search.
+
+You need to collect at least 1,000 [`clickedObjectIDsAfterSearch`](/api-reference/api-methods/clicked-object-ids-after-search/) or 100 [`clickedObjectIDsAfterSearch`](/api-reference/api-methods/clicked-object-ids-after-search/) events within 30 days to activate NeuralSearch. If you have fewer events, you can’t use NeuralSearch.
+
+
+## Set up NeuralSearch
+
+You can activate NeuralSearch on an index in your Algolia dashboard:
+
+<Echo name="common/dashboard"/>
+
+1. Go to **Configure > NeuralSearch** and click **Configure NeuralSearch**.
+
+1. Select your **event source**.
+   By default, NeuralSearch uses events from the index you selected to train the language model.
+   If your index has replicas, you can add them as additional event sources.
+   Click **Add event sources** to add these additional event source indices.
+
+1. If you collected enough events in the last 30 days, you can select one of these options:
+
+   - Select **Activate NeuralSearch** to start the training and activate NeuralSearch for the current index.
+   - Select **See NeuralSearch in action** to create a replica index where you can test NeuralSearch.
+
+   Both options are inactive until you collect enough events.
+
+<Callout type="info">
+  Building the NeuralSearch index takes time, depending on your index size.
+</Callout>
+
+## Search with NeuralSearch
+
+Searching with NeuralSearch works the same as before,
+except with an increased understanding of the query.
+Now, instead of matching only keywords in the text,
+the search engine also returns results matching the _concept_ of what the searcher is looking for.
+
+## Set the search mode in the API
+
+After activating NeuralSearch in the dashboard,
+you can use the [`mode`](/api-reference/api-parameters/mode) API parameter to turn NeuralSearch off:
+
+
+
+To re-activate NeuralSearch for the current index:
+
+
+
+## How NeuralSearch ranks results
+
+NeuralSearch results have a neural score composed of a _keyword score_, a _semantic score_, or both.
+
+### Keyword score
+
+The keyword score represents how well a record matches the query from a keyword search against other keyword-retrieved results.
+At the base of this score is Algolia's tie-breaking algorithm.
+A record has a keyword score if keyword search finds it.
+
+### Semantic score
+
+The semantic score represents how well a record matches the query from a vector search against other vector-retrieved results.
+At the basis of this score is [neural hash similarity](https://www.algolia.com/blog/ai/what-is-hashing-and-how-does-it-improve-website-and-app-search/).
+A record has a semantic score if vector search finds it.
+
+### Neural score
+
+The neural score combines the keyword score and the semantic score.
+It measures how relevant the record is compared to the other records in the result set.
+The neural score answers the question:
+_“Against this query, compared to these other results, how relevant is this result?”_

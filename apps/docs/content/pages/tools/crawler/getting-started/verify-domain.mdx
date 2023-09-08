@@ -1,0 +1,53 @@
+---
+navigation: "crawler"
+
+title: |-
+  Verify your domains
+description: |-
+  How to verify your domains to allow the Crawler to discover your websites.
+slug: tools/crawler/getting-started/verify-domain
+---
+
+
+Algolia's Crawler is a "robot" that can access, discover and extract data.
+
+By verifying a domain, you allow the Crawler to browse the content of your verified sites. Verifying your domains ensures that your organization owns the crawled data and avoids disputes about the legality of the Crawler's activity.
+
+## Verifying a domain
+
+**To verify a domain, you must change your site's ["robots.txt" file](https://developers.google.com/search/docs/advanced/robots/intro).**
+
+
+
+1. Go to the [Crawler's domains page](https://crawler.algolia.com/admin/domains) and find your Algolia application ID
+    <Media type="image" id="tools/crawler/guides/verify-domain/domains-page.png" alt="" />
+2.  Click the icon to the right of **How to verify domain?** to copy the verification code to your clipboard. Only people who are [team members](https://support.algolia.com/hc/en-us/articles/4406975221649-How-do-I-manage-access-to-an-Algolia-account-) of your Algolia application with `Configure` permission on the Crawler can verify this code.
+    <Media type="image" id="tools/crawler/guides/verify-domain/copy-verification-code-to-clipboard.jpg" alt="" />
+3. Paste the verification code anywhere in your robots.txt file.
+    <Media type="image" id="tools/crawler/guides/verify-domain/robots_txt.png" alt="" />
+4. Click **Add new domain** and fill in the details (**App ID** and **Domains and subdomains**) to add your sites to the Algolia application.
+    <Media type="image" id="tools/crawler/guides/verify-domain/domains-creation.png" alt="" />
+5.  Click the **Verify now** button.
+
+
+
+
+<Callout type="info">
+  The verification code is a unique string for each application. Having access to the code poses no risk, so you shouldn't worry about exposing it publicly in robots.txt.
+</Callout>
+
+
+
+<Callout type="caution">
+  If you reset the verification code, all previously verified domains will be invalidated.
+</Callout>
+
+## You must verify all subdomains
+
+The Crawler doesn't allow wildcards like `*.algolia.com`, domains must be an exact match. For example, if you want to crawl `algolia.com` and all its subdomains, you must individually add the domains: `algolia.com`, `www.algolia.com`, and `support.algolia.com`.
+
+If you wish, contact the  team and ask them to verify your subdomains for you.
+
+## Troubleshooting: Impossible to verify a domain
+
+If you can't verify your domain, for instance, the platform you are using prevents you from updating robots.txt or your website isn't at the root level, contact the  for help.

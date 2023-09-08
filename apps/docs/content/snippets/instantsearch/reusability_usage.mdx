@@ -1,0 +1,46 @@
+## Using the custom widget
+
+  You can use a custom widget like any widget provided by the library. It takes the parameters to forward to the connectors, HTML props for the root element, and an object for classes.
+
+  ```jsx
+    import algoliasearch from 'algoliasearch/lite';
+    import instantsearch from 'instantsearch.js';
+
+    import { negativeRefinementList } from './negativeRefinementList';
+
+    const searchClient = algoliasearch('YourApplicationID', 'YourSearchOnlyAPIKey');
+
+    const search = instantsearch({
+      indexName: 'instant_search',
+      searchClient,
+    });
+
+    search.addWidgets([
+      negativeRefinementList({
+        // Connector parameters
+        attribute: 'brand',
+        // Container to inject into
+        container: '#negative-refinement-list',
+        // Custom CSS classes
+        cssClasses: {
+          root: 'MyCustomNegativeRefinementList',
+          item: 'MyCustomNegativeRefinementListItem',
+        },
+      }),
+    ]);
+
+    search.start();
+    ```
+
+  This is what the widget looks like in an application.
+
+    <Media type="image" id="build-search-ui/negative-refinement-list.gif" alt="Negative refinement list custom widget" figcaption="Negative refinement list custom widget"/>
+
+  ## Next steps
+
+  You now have a good starting point to take full control of your InstantSearch experience. Next up, you could go further by:
+
+  - Improving the widget's API with useful parameters like the
+  [`connectRefinementList`](/api-reference/widgets/refinement-list/js#hook-param-init-instance-options) ones.
+
+  - Open sourcing your custom widget on [GitHub](https://github.com/) and publish it on [npm](https://www.npmjs.com/) (if you do, [let us know!](https://github.com/algolia/instantsearch/discussions/new?category=show-and-tell)).

@@ -1,0 +1,216 @@
+---
+navigation: "crawler"
+
+title: |-
+  Quickstart
+description: |-
+  Crawl the Algolia Blog to learn the basics of the Algolia Crawler.
+slug: tools/crawler/getting-started/quick-start
+---
+
+
+This page uses an example to teach you how to make and use a crawler. You'll learn how to crawl the Algolia blog at `algolia.com/blog` and index the content in an Algolia index named `crawler_default_index_name`.
+
+## Initialization
+
+Create a new crawler on the [Crawler dashboard](https://crawler.algolia.com/admin/user_configs/) by clicking on the **Create new crawler** button.
+
+Fill in the required fields with the following information:
+
+- **Crawler Name**: Algolia Blog
+- **App ID**: the Algolia application you want to target
+- **Start URL**: `https://www.algolia.com/blog`
+
+### Advanced options
+
+- **API Key**: by default, one is generated for your crawler, but you can use an existing one from your [Algolia dashboard](https://dashboard.algolia.com/account/api-keys/)
+- **Algolia Index Prefix**: `crawler_`
+
+<Media type="image" id="tools/crawler/creating-a-crawler-admin.png" alt="" />
+
+Now that your crawler is created, you can edit and view its configuration. You can do this from the **Editor** tab of the Admin.
+
+## Default Configuration File
+
+```js
+new Crawler({
+  appId: "YOUR_APP_ID",
+  apiKey: "YOUR_API_KEY",
+  indexPrefix: "crawler_",
+  rateLimit: 8,
+  maxUrls: 500,
+  startUrls: ["https://www.algolia.com/blog"],
+  ignoreQueryParams: ["utm_medium", "utm_source", "utm_campaign", "utm_term"],
+  actions: [
+    {
+      indexName: "default_index_name",
+      pathsToMatch: ["https://www.algolia.com/blog/**"],
+      recordExtractor: ({ url, $, contentLength, fileType }) => {
+        console.log(`Crawling "${url.href}"`);
+
+        return [
+          {
+            // URL
+            url: url.href,
+            hostname: url.hostname,
+            path: url.pathname,
+            depth: url.pathname.split("/").length - 1,
+
+            // Metadata
+            contentLength,
+            fileType,
+            title: $("head > title").text(),
+            keywords: $("meta[name=keywords]").attr("content"),
+            description: $("meta[name=description]").attr("content"),
+            type: $('meta[property="og:type"]').attr("content"),
+            image: $('meta[property="og:image"]').attr("content"),
+
+            // Content
+            headers: $("h1,h2")
+              .map((i, e) => $(e).text())
+              .get()
+          }
+        ]
+      }
+    }
+  ],
+  initialIndexSettings: {
+    default_index_name: {
+      searchableAttributes: [
+        "unordered(keywords)",
+        "unordered(title)",
+        "unordered(description)",
+        "unordered(headers)",
+        "url"
+      ],
+      customRanking: ["asc(depth)"],
+      attributesForFaceting: ["fileType", "type"]
+    }
+  }
+});
+```
+
+The default crawler configuration works on the Algolia Blog. If you want, you can [start crawling right away](#start-crawling).
+
+To offer a better understanding of the default crawler object, we'll first provide a quick high level overview of its components.
+
+Each crawler has a configuration file. The configuration file starts by defining a crawler object, which is made of top level parameters, actions, and index settings.
+
+### Top level parameters
+
+The following parameters apply to all your actions:
+- [`appId`](/tools/crawler/apis/configuration/appId): the ID of your Algolia application.
+- [`apiKey`](/tools/crawler/apis/configuration/apiKey): the API key of your Algolia application
+
+<Callout type="info">
+  You can find your API keys on the **API key** tab of your [Algolia dashboard](https://dashboard.algolia.com/dashboard)
+</Callout>
+
+- [`indexPrefix`](/tools/crawler/apis/configuration/indexPrefix): the prefix added to the Algolia indices your crawler generates.
+- [`rateLimit`](/tools/crawler/apis/configuration/rateLimit): the number of concurrent tasks (per second) that can run for this crawler.
+- [`maxUrls`](/tools/crawler/apis/configuration/maxUrls): the maximum number of URLs your crawler will crawl.
+- [`startUrls`](/tools/crawler/apis/configuration/startUrls): the URLs that your Crawler starts on.
+- [`ignoreQueryParams`](/tools/crawler/apis/configuration/ignoreQueryParams): the parameters added to URLs as the crawl progresses that you want to ignore (you don't have to worry about this parameter for now).
+
+### Actions
+
+A crawler can have any number of [`actions`](/tools/crawler/apis/configuration/actions). An action indicates a subset of your targeted URLs that you want to extract records from in a specific way. For example, suppose you want to crawl a site which contains a blog, a homepage, and documentation. You likely need a unique [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor) for each section and may want to store their content in different indices: to accomplish this, you can use actions.
+
+Actions include:
+- an `indexName`, which defines the Algolia index extracted records will go to,
+- and `pathsToMatch` which defines the pattern(s) URLs must match to be processed by the action.
+
+Actions also contain a `recordExtractor`. A `recordExtractor` is a function that defines how content from an action's webpages should be extracted and formatted into Algolia records. For more details on the `recordExtractor`, please read our [extraction guide](/tools/crawler/guides/extracting-data).
+
+### Index settings
+
+The [`initialIndexSettings`](/tools/crawler/apis/configuration/initialIndexSettings) part of your crawler defines the default settings of your crawler generated Algolia indices.
+
+<Callout type="warning">
+  These settings are only applied the first time you run your crawler. For all subsequent crawls, `initialIndexSettings` is ignored.
+</Callout>
+
+## Start crawling
+
+To start your crawler, go to the **Overview** tab and click on the **Start crawling** button. After a couple of minutes, the crawl should finish.
+
+To better understand your crawler, let's take a look at what happened when you clicked the **Start crawling** button.
+
+## Link extraction
+
+Clicking on **Start crawling** launches a crawl that starts from the URLs you provide in the [`startUrls`](/tools/crawler/apis/configuration/startUrls),  [`sitemaps`](/tools/crawler/apis/configuration/sitemaps), and [`extraUrls`](/tools/crawler/apis/configuration/extraUrls) parameters of your crawler object. `startUrls` defaults to the homepage you provided when you created your crawler, but you can add custom starting points by editing your crawler's configuration.
+
+```js
+startUrls: ["https://www.algolia.com/blog/"],
+```
+
+Your crawler fetches the start page(s) and extracts every link they contain.
+However, it doesn't follow every link: otherwise you could end up inadvertently crawling a huge chunk of the web.
+
+For example, if your site has a link to a popular Wikipedia page, every link on that Wikipedia page would be crawled, and all the links on those pages too, and so on. As you can imagine, this can quickly become unmanageable. One of the critical ways you can restrict which links your crawler follows is with the [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) field of your crawler object.
+
+The scope of your crawl is defined through the `pathsToMatch` field. Only links that match a path found in `pathsToMatch` are crawled. This field defaults to paths starting with the same URL as your homepage.
+
+```js
+pathsToMatch: ["https://www.algolia.com/blog/**"],
+```
+
+## Content extraction
+
+The following `recordExtractor` is applied to each page that matches a path in `pathsToMatch`:
+
+```js
+recordExtractor: ({ url, $, contentLength, fileType }) => {
+     return [{ url: url.href, title: $('head > title').text() }];
+}
+```
+
+This `recordExtractor` creates an array of records per crawled page and adds those records to the index you defined in your actions `indexName` field (prefixed by the value of `indexPrefix`).
+
+You can verify the process in your [Algolia dashboard](https://dashboard.algolia.com/dashboard).
+
+You should find an index with the `indexName` you defined, prefixed by the `indexPrefix`. For our example, the index would be called `crawler_default_index_name`.
+
+
+<Callout type="info">
+  For a complete overview of `recordExtractor`s, read our [extractors guide](/tools/crawler/guides/extracting-data).
+</Callout>
+
+## Exclusions
+
+Now, let's take a look at the **Monitoring** tab of your Crawler dashboard.
+On this page, you may see that the crawler has ignored a number of pages.
+This is valuable information: **if you can identify a pattern to the ignored pages, you can tell the crawler to exclude these pages on future reindexes**.
+
+<Callout type="info">
+  Excluding is not the same as ignoring. An excluded page is not crawled. An ignored page is crawled (or a crawl attempt is made) but nothing is extracted.
+</Callout>
+
+Excluding pages has two main advantages:
+1. It lowers the resource usage of your crawler on our infrastructure.
+2. It speeds up your crawling by only fetching and processing meaningful URLs.
+
+In our blog example, we don't have any specific ignored URLs. However, we have typical URLs that we might want to exclude, such as password-protected pages of the website for example.
+These pages would appear as `HTTP Unauthorized (401)` or `HTTP Forbidden (403)` entries in the **Monitoring** section.
+
+When you have identified a pattern, you can exclude these URLs:
+1. Go to the **Settings** tab, and scroll down to the **Exclusions** section.
+2. Click the **Add an Exclusion** button, enter your pattern, for example, `https://www.algolia.com/blog/private/**`, and click **Save**.
+3. At the bottom of your configuration file, you should find the following:
+   ```js
+   exclusionPatterns: ['https://www.algolia.com/blog/private/**'],
+   ```
+4. Go to the **Overview** tab and click the **Restart crawling** button.
+5. Once the crawl is finished, reopen the **Monitoring tab** to confirm that the `HTTP Unauthorized (401)` errors are gone.
+
+<Callout type="info">
+  See the documentation for [`exclusionPatterns`](/tools/crawler/apis/configuration/exclusionPatterns).
+</Callout>
+
+## Advanced crawler configuration
+
+That's it for the quick introduction.
+
+You can find the complete configuration reference on the [Configuration API page](/tools/crawler/apis/configuration/).
+
+Or checkout our Github Repository of [sample crawler configuration files](https://github.com/algolia/crawler-configurations-examples).

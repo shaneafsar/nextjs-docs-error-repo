@@ -1,0 +1,684 @@
+---
+navigation: "default"
+
+title: |-
+  Delete indices
+description: |-
+  Delete an index and all its settings, including links to its replicas.
+slug: guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/delete-indices
+---
+
+
+Deleting an index permanently removes the records and the index configuration,
+like searchable attributes and custom ranking, from your Algolia application.
+
+Instead of deleting the complete index, you can also delete (clear) just the records,
+keeping the configuration.
+See [Clear records from an index](#clear-records-from-an-index-in-the-algolia-dashboard) on this page for more information.
+
+Before you delete an index, consider creating a backup by [exporting your index](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/export-import-indices/).
+
+<Callout type="info">
+  Deleting an index doesn't affect [its analytics data](/api-client/methods/manage-indices/#analytics-data).
+</Callout>
+
+## Indices with replicas
+
+If the index you want to delete is a replica of another index,
+you must first [unlink it](/guides/managing-results/refine-results/sorting/how-to/deleting-replicas/).
+
+If the index is a primary index and has replicas,
+the replica indices will become independent indices if you delete their primary index.
+
+## Delete indices in the Algolia dashboard
+
+To delete an index from the dashboard:
+
+<Echo name="common/dashboard"/>
+
+1. Select **Manage index > Delete**.
+
+   <Media type="image" id="guides/indexing/delete-indices.png" alt="" />
+
+1. Type `DELETE` to confirm and click **Delete**.
+
+## Delete indices with the API
+
+To delete an index, use one of these methods:
+
+- API clients: [`deleteIndex`](/api-reference/api-methods/deleteIndex)
+- Algolia CLI: [`algolia indices delete`](/tools/cli/commands/algolia-indices/#algolia-indices-delete)
+
+
+
+### Delete multiple indices
+
+To delete more than one index,
+use [`listIndices`](/api-reference/api-methods/listIndices) to get your indices and then use the [`multipleBatch`]([`batch`](/api-reference/api-methods/batch)) method to delete multiple indices with a single API request.
+
+To delete replica indices, you must first [delete their primary indices](#indices-with-replicas).
+You can delete multiple indices with the [`algolia indices delete`](/tools/cli/commands/algolia-indices/#algolia-indices-delete) command.
+
+
+
+
+<CodeSnippetGroup>
+
+
+    ```scala
+package org.example
+
+import algolia.AlgoliaClient
+import algolia.AlgoliaDsl._
+import algolia.responses.Indices
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.language.postfixOps
+
+object Program extends App {
+  // You need an API key with `deleteIndex` permission
+  val client = new AlgoliaClient("YourApplicationID", "YourAPIKey")
+
+  // List all indices
+  val indices: Indices = Await.result(
+    client.execute(list indices), Duration.Inf
+  )
+
+  // Primary indices don't have a `primary` key
+  val (primaryIndices, replicaIndices) = indices.items.partition(_.primary == null)
+
+  // Delete primary indices first
+  for (i <- primaryIndices.items) {
+    Await.result(client.execute(delete index i.name), Duration.Inf)
+  }
+  println("Deleted primary indices.")
+
+  // Now, delete replica indices
+  for (i <- replicaIndices.items) {
+    Await.result(client.execute(delete index i.name), Duration.Inf)
+  }
+  println("Deleted replica indices.")
+}
+```
+
+
+    ```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+)
+
+func main() {
+  // You need an API key with `deleteIndex` permissions
+  client := search.NewClient(
+    "YourApplicationID",
+    "YourAPIKey"
+  )
+
+  // List all indices
+  indices, _ := client.ListIndices()
+
+  var primaryIndices []search.BatchOperationIndexed
+  var replicaIndices []search.BatchOperationIndexed
+
+  for _, index := range indices.Items {
+    action := search.BatchOperationIndexed{
+      IndexName:      index.Name,
+      BatchOperation: search.BatchOperation{Action: search.Delete},
+    }
+    // Primary indices don't have a `Primary` key
+    if index.Primary == "" {
+      primaryIndices = append(primaryIndices, action)
+    } else {
+      replicaIndices = append(replicaIndices, action)
+    }
+  }
+
+  if len(primaryIndices) > 0 {
+    res, err := client.MultipleBatch(primaryIndices)
+    if err != nil {
+      panic(err)
+    }
+    res.Wait()
+    fmt.Println("Primary indices deleted")
+  }
+
+  if len(replicaIndices) > 0 {
+    _, err := client.MultipleBatch(replicaIndices)
+    if err != nil {
+      panic(err)
+    }
+    fmt.Println("Replica indices deleted")
+  }
+}
+```
+
+
+    ```java
+import com.algolia.search.DefaultSearchClient;
+import com.algolia.search.SearchClient;
+import com.algolia.search.models.indexing.ActionEnum;
+import com.algolia.search.models.indexing.BatchOperation;
+import com.algolia.search.models.indexing.IndicesResponse;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class Program {
+  public static void main(String[] args) {
+    // You need an API key with `deleteIndex` permissions
+    SearchClient client = DefaultSearchClient.create(
+      "YourApplicationID", "YourAPIKey"
+    );
+
+    // List indices, primary indices don't have a `primary` key
+    Map<Boolean, List<IndicesResponse>> indices = client.listIndices().stream().collect(Collectors.partitioningBy(index -> index.getPrimary() == null));
+
+    List<IndicesResponse> primaryIndices = indices.get(true);
+    List<IndicesResponse> replicaIndices = indices.get(false);
+
+    // Delete primary indices first
+    if (!primaryIndices.isEmpty()) {
+      client.multipleBatch(
+        primaryIndices
+          .stream()
+          .map(index -> new BatchOperation<>(index.getName(), ActionEnum.DELETE))
+          .collect(Collectors.toList()));
+
+        System.out.println("Deleted primary indices.");
+    }
+
+    // Now, delete replica indices
+    if (!replicaIndices.isEmpty()) {
+      client.multipleBatch(
+        replicaIndices
+          .stream()
+          .map(index -> new BatchOperation<>(index.getName(), ActionEnum.DELETE))
+          .collect(Collectors.toList()));
+
+        System.out.println("Deleted replica indices.");
+    }
+    System.exit(0);
+  }
+}
+```
+
+
+    ```csharp
+using System;
+using System.Collections.Generic;
+using Algolia.Search.Clients;
+using Algolia.Search.Models.Batch;
+using Algolia.Search.Models.Enums;
+
+namespace DeleteIndex
+{
+  class Program
+  {
+    static void Main(string[] args)
+    {
+      // You need an API key with `deleteIndex` permissions
+      var client = new SearchClient(
+          "YourApplicationID",
+          "YourAPIKey"
+      );
+
+      // List all indices
+      var indices = client.ListIndices().Items;
+      var primaryIndices = new List<BatchOperation<string>>();
+      var replicaIndices = new List<BatchOperation<string>>();
+
+      foreach (var index in indices)
+      {
+        var action = new BatchOperation<string>
+        {
+          IndexName = index.Name,
+          Action = BatchActionType.Delete
+        };
+        // Primary indices don't have a `Primary` key
+        if (index.Primary == null)
+        {
+          primaryIndices.Add(action);
+        }
+        else
+        {
+          replicaIndices.Add(action);
+        }
+      }
+
+      // Delete primary indices first
+      if (primaryIndices.Count > 0)
+      {
+        client.MultipleBatch(primaryIndices).Wait();
+        Console.WriteLine("Deleted primary indices.");
+      }
+
+      // Now, delete replica indices
+      if (replicaIndices.Count > 0)
+      {
+        client.MultipleBatch(replicaIndices);
+        Console.WriteLine("Deleted replica indices.");
+      }
+    }
+  }
+}
+```
+
+
+    ```kotlin
+import com.algolia.search.client.ClientSearch
+import com.algolia.search.model.APIKey
+import com.algolia.search.model.ApplicationID
+import com.algolia.search.model.indexing.BatchOperation
+import com.algolia.search.model.multipleindex.BatchOperationIndex
+
+suspend fun main() {
+  // You need an API key with `deleteIndex` permission
+  val client = ClientSearch(
+    applicationID = ApplicationID("YourApplicationID"),
+    apiKey = APIKey("YourAPIKey")
+  )
+
+  // Primary indices don't have a `primary` key
+  val (primaryIndices, replicaIndices) = client.listIndices().items.partition {
+    it.primaryOrNull == null
+  }
+
+  // Delete primary indices first
+  if (primaryIndices.isNotEmpty()) {
+    client.multipleBatchObjects(
+      primaryIndices.map {
+        BatchOperationIndex(it.indexName, BatchOperation.DeleteIndex)
+      }
+    )
+    println("Deleted primary indices.")
+  }
+
+  // Now, delete replica indices
+  if (replicaIndices.isNotEmpty()) {
+    client.multipleBatchObjects(
+      replicaIndices.map {
+        BatchOperationIndex(it.indexName, BatchOperation.DeleteIndex)
+      }
+    )
+    println("Deleted replica indices.")
+  }
+}
+```
+
+
+    ```swift
+import AlgoliaSearchClient
+
+// You need an API key with `deleteIndex`
+let client = SearchClient(
+  appID: "YourApplicationID",
+  apiKey: "YourAPIKey"
+)
+
+// List all indices
+let indices = try client.listIndices()
+
+// Primary indices don't have a `primary` key
+let primaryIndices = indices.items.filter { $0.primary == nil }
+let replicaIndices = indices.items.filter { $0.primary != nil }
+
+// Delete primary indices first
+try! client.multipleBatchObjects(operations: primaryIndices)
+print("Deleted primary indices.")
+
+// Now, delete replica indices
+try! client.multipleBatchObjects(operations: replicaIndices)
+print("Deleted replica indices.")
+```
+
+
+    ```python
+from algoliasearch.search_client import SearchClient
+
+# You need an API key with `deleteIndex` permissions
+client = SearchClient.create('YourApplicationID', 'YourAPIKey')
+
+# List all indices
+indices = client.list_indices()
+
+primaries = []
+replicas = []
+
+for index in indices["items"]:
+  action = {"indexName": index["name"], "action": "delete"}
+
+  # Primary indices don't have a `primary` key
+  if not "primary" in index :
+    primaries.append(action)
+  else:
+    replicas.append(action)
+
+# Delete primary indices first
+client.multiple_batch(primaries).wait()
+print("Deleted primary indices.")
+
+# Now, delete replica indices
+client.multiple_batch(replicas)
+print("Deleted replica indices.")
+```
+
+
+    ```js
+const algoliasearch = require("algoliasearch");
+
+// You need an API key with `deleteIndex` permissions
+const client = algoliasearch("YourApplicationID", "YourAPIKey");
+
+// Use async/await syntax
+(async () => {
+  // List all indices
+  const indices = await client.listIndices();
+
+  // Primary indices don't have a `primary` key
+  const primaryIndices = indices.items.filter((index) => !index.primary);
+  const replicaIndices = indices.items.filter((index) => index.primary);
+
+  // Delete primary indices first
+  client
+    .multipleBatch(
+      primaryIndices.map((index) => {
+        return { indexName: index.name, action: "delete" };
+      })
+    )
+    .wait();
+  console.log("Deleted primary indices.");
+
+  // Now, delete replica indices
+  client.multipleBatch(
+    replicaIndices.map((index) => {
+      return { indexName: index.name, action: "delete" };
+    })
+  );
+  console.log("Deleted replica indices.");
+})();
+```
+
+
+    ```php
+<?php
+require_once __DIR__."/vendor/autoload.php";
+use Algolia\AlgoliaSearch\SearchClient;
+
+// You need an API key with `deleteIndex` permissions
+$client = SearchClient::create('YourApplicationID', 'YourAPIKey');
+
+// List all indices
+$indices = $client->listIndices();
+
+// Primary indices don't have a `primary` key
+$primaryIndices = array_filter($indices['items'], function ($index){
+    return !isset($index['primary']);
+});
+$replicaIndices = array_filter($indices['items'], function ($index){
+    return isset($index['primary']);
+});
+
+// Delete primary indices first
+foreach ($primaryIndices as $i) {
+  $index = $client->initIndex($i['name']);
+  $index->delete()->wait();
+}
+echo "Deleted primary indices.\n";
+
+// Now, delete replica indices
+foreach ($replicaIndices as $i) {
+  $index = $client.initIndex($i['name']);
+  $index->delete()->wait();
+}
+echo "Deleted replica indices.\n";
+```
+
+
+    ```sh
+$ algolia index delete <INDEX_1> <INDEX_2> <INDEX_3>
+```
+
+
+    ```ruby
+require 'algolia'
+
+# You need an API key with `deleteIndex` permissions
+client = Algolia::Search::Client.create('YourAppplicationId', 'YourAPIKey')
+
+# List all indices
+indices = client.list_indexes
+
+# Primary indices don't have a `primary` key
+primaryIndices, replicaIndices = indices[:items].partition { |index| index[:primary].nil? }
+
+# Delete primary indices first
+client.multiple_batch(
+  primaryIndices.map { |index| { indexName: index[:name], action: 'delete' } }
+).wait
+puts 'Deleted primary indices.'
+
+# Now, delete replica indices
+client.multiple_batch(
+  replicaIndices.map { |index| { indexName: index[:name], action: 'delete' } }
+)
+puts 'Deleted replica indices.'
+```
+
+</CodeSnippetGroup>
+
+
+
+## Clear records from an index in the Algolia dashboard
+
+If you only want to delete (clear) the records from an index, keeping the index configuration, follow these steps:
+
+<Echo name="common/dashboard"/>
+
+1. Select **Manage index > Clear**.
+
+   <Media type="image" id="guides/indexing/clear-indices.png" alt="" />
+
+1. Type `CLEAR` to confirm and click **Clear**.
+
+## Clear records from an index with the API
+
+To remove only the records from the index,
+while keeping the settings, synonyms, and rules,
+use one of the following methods:
+
+- API clients: [`clearObjects`](/api-reference/api-methods/clearObjects)
+- Algolia CLI: [`algolia indices clear`](/tools/cli/commands/algolia-indices/#algolia-indices-clear)
+
+
+
+
+<CodeSnippetGroup>
+
+
+    ```scala
+package org.example
+
+import algolia.AlgoliaClient
+import algolia.AlgoliaDsl._
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.language.postfixOps
+
+object Program extends App {
+  // You need an API key with `deleteIndex` permissions
+  val client = new AlgoliaClient("YourApplicationID", "YourAPIKey")
+
+  Await.result(
+    client.execute(clear index "YourIndexName"), Duration.Inf
+  )
+  println("Deleted records.")
+}
+```
+
+
+    ```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/algolia/algoliasearch-client-go/v3/algolia/search"
+)
+
+func main() {
+  // You need an API key with `deleteIndex` permissions
+  client := search.NewClient(
+    "YourApplicationID",
+    "YourAPIKey"
+  )
+  index := client.InitIndex("YourIndexName")
+  index.ClearObjects()
+  fmt.Println("Deleted records.")
+```
+
+
+    ```java
+import com.algolia.search.DefaultSearchClient;
+import com.algolia.search.SearchClient;
+import com.algolia.search.SearchIndex;
+
+public class Program {
+  public static void main(String[] args) {
+    // You need an API key with `deleteIndex` permissions
+    SearchClient client = DefaultSearchClient.create(
+      "YourApplicationID", "YourAPIKey"
+    );
+
+    SearchIndex index = client.initIndex("YourIndexName");
+    index.clearObjects();
+    System.out.println("Deleted records.");
+  }
+}
+```
+
+
+    ```csharp
+using System;
+using Algolia.Search.Clients;
+
+namespace ClearObjects
+{
+  class Program
+  {
+    static void Main(string[] args)
+    {
+      // You need an API key with `deleteIndex` permissions
+      var client = new SearchClient(
+          "YourApplicationID",
+          "YourAPIKey"
+      );
+
+      var index = client.InitIndex("YourIndexName");
+      index.ClearObjects();
+      Console.WriteLine("Deleted records.");
+    }
+  }
+}
+```
+
+
+    ```kotlin
+import com.algolia.search.client.ClientSearch
+import com.algolia.search.model.APIKey
+import com.algolia.search.model.ApplicationID
+import com.algolia.search.model.IndexName
+
+suspend fun main() {
+  // You need an API key with `deleteIndices` permission
+  val client = ClientSearch(
+    applicationID = ApplicationID("YourApplicationID"),
+    apiKey = APIKey("YourAPIKey")
+  )
+
+  val index = client.initIndex(IndexName("YourIndexName"))
+  index.clearObjects()
+  println("Deleted records.")
+}
+```
+
+
+    ```swift
+import AlgoliaSearchClient
+
+let client = SearchClient(
+  appID: "YourApplicationID",
+  apiKey: "YourAPIKey"
+)
+
+let index = client.index(withName: "YourIndexName")
+try! index.clearObjects()
+print("Deleted records.")
+```
+
+
+    ```python
+from algoliasearch.search_client import SearchClient
+
+# You need an API key with `deleteIndex` permissions
+client = SearchClient.create("YourApplicationID", "YourAPIKey")
+
+index = client.init_index("YourIndexName")
+index.clear_objects()
+print("Deleted records.")
+```
+
+
+    ```javascript
+const algoliasearch = require("algoliasearch");
+
+// You need an API key with `deleteIndex` permissions
+const client = algoliasearch("YourApplicationID", "YourAPIKey");
+
+const index = client.initIndex("YourIndexName");
+index.clearObjects();
+console.log("Deleted records");
+```
+
+
+    ```php
+<?php
+require_once __DIR__."/vendor/autoload.php";
+use Algolia\AlgoliaSearch\SearchClient;
+
+// You need an API key with `deleteIndex` permissions
+$client = SearchClient::create('YourApplicationID', 'YourAPIKey');
+
+$index = $client->initIndex('YourIndexName');
+$index->clearObjects();
+echo "Deleted records.\n";
+```
+
+
+    ```ruby
+require 'algolia'
+
+# You need an API key with `deleteIndex` permissions
+client = Algolia::Search::Client.create('YourAppplicationID', 'YourAPIKey')
+
+index = client.init_index('YourIndexName')
+index.clear_objects
+puts "Deleted records."
+```
+
+
+    ```sh
+$ algolia index clear YourIndexName
+```
+
+</CodeSnippetGroup>
+
+

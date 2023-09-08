@@ -1,0 +1,85 @@
+---
+navigation: "default"
+
+title: |-
+  Move indices
+description: |-
+  Learn how to move, or rename indices including their records, settings, synonyms, and Rules.
+slug: guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/move-indices
+---
+
+
+If you want to rename indices, you can **move** them using the Algolia dashboard or the API.
+Moving an index [doesn't move the associated analytics data](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/concepts/indices-analytics/).
+You can only rename primary indices.
+
+[Renaming replica indices](/guides/managing-results/refine-results/sorting/how-to/rename-a-replica-index/) requires several steps.
+
+<Callout type="info">
+  Moving or renaming an index is resource-intensive and is
+[rate-limited](https://support.algolia.com/hc/en-us/articles/4406975251089#when-do-we-trigger-the-rate-limit).
+</Callout>
+
+## Rename indices in the Algolia dashboard
+
+<Echo name="common/dashboard"/>
+
+1. Select **Manage index > Rename**.
+
+   <Media type="image" id="guides/indexing/rename-indices.png" alt="" />
+
+<Callout type="info">
+  The **Rename** option only shows if you selected a primary index.
+   It doesn't show for replica indices.
+</Callout>
+
+1. Enter the current and new index names and click **Rename**.
+
+<Callout type="warning">
+  If an index with the new name already exists, it's overwritten.
+</Callout>
+
+## Rename indices with the API
+
+To rename or move an index with the API, use one of these methods:
+
+- API clients: [`moveIndex`](/api-reference/api-methods/moveIndex)
+- Algolia CLI: [`algolia indices move`](/tools/cli/commands/algolia-indices/#algolia-indices-move)
+
+To move an index between different Algolia applications,
+see [Copy indices between apps](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/copy-indices/#copy-indices-between-different-applications).
+
+
+
+<Callout type="warning">
+  If an index with the new name already exists, `move` overwrites it.
+If you want to avoid overwriting existing indices,
+you can check if an index exists with the [`indexExists`](/api-reference/api-methods/indexExists) method.
+</Callout>
+
+If the source index doesn't exist, Algolia ignores the `move` operation.
+
+Renaming an index doesn't change the associated analytics:
+
+- Analytics belonging to the original index keep their name.
+- A new set of analytics is started with the new name.
+
+See [Indices and analytics](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/concepts/indices-analytics) for more information.
+
+### Indices with replicas
+
+**You can't move a source index with replicas.** It would break the relationship between the index and its replicas.
+
+You can move an index to a destination index with replicas.
+First, the source index data replaces the destination index data.
+Then, the data is copied to the replicas.
+
+### Moving indices used as a Recommend data source
+
+If an index is the data source for Recommend models, you can't rename it directly. If you do so, you'll lose the relationship between the recommended records and their source.
+
+Instead:
+1. Copy the index.
+2. To keep the events you already collected, train a new model on the copy index using the old index as an additional [events source](/guides/algolia-recommend/how-to/set-up/#train-the-recommend-models).
+3. After training, switch your own apps and services to use the new index.
+4. [Delete the old index](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/delete-indices/) and the old model (from the [Algolia dashboard](https://dashboard.algolia.com/recommend/models)).

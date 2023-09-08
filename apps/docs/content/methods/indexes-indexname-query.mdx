@@ -1,0 +1,44 @@
+---
+slug: indexes-indexname-query
+summary: Method is this()
+description: This method is great, you should use it
+tags:
+  - Indexing
+# parameters:
+#   example:
+#     name: example
+#     schema:
+#       type: string
+#     description: this is a description of the example parameter
+---
+
+<CodeSnippetGroup>
+```javascript
+import algoliasearch from "algoliasearch";
+
+const client = algoliasearch("APP_ID", "API_KEY");
+const index = client.initIndex("your_index_name");
+
+index.search();
+```
+
+```ruby
+require 'algoliasearch'
+
+client = Algolia::Client.new(application_id: 'APP_ID', api_key: 'API_KEY')
+index = client.init_index('your_index_name')
+
+index.search
+```
+
+```python
+import algoliasearch
+
+client = algoliasearch.Client("APP_ID", "API_KEY")
+index = client.init_index("your_index_name")
+
+index.search()
+```
+</CodeSnippetGroup>
+
+

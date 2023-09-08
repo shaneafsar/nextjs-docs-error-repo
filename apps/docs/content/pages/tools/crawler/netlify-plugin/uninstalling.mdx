@@ -1,0 +1,29 @@
+---
+navigation: "crawler"
+
+title: |-
+  Uninstalling
+description: |-
+  Uninstalling the Algolia Netlify plugin.
+slug: tools/crawler/netlify-plugin/uninstalling
+---
+
+
+## Disabling the plugin
+
+You can temporarily turn off the plugin by adding the following environment variable in Netlify, under **Deploy > Settings > Build & Deploy > Environment**.
+
+```yaml
+ALGOLIA_DISABLED=true
+```
+
+## Uninstalling the plugin
+
+To uninstall the plugin, go to your [Crawler Admin Console](https://crawler.algolia.com/admin/netlify) and click **Uninstall**. It automatically cleans up the environment variables and deletes associated data from Algolia.
+
+You can also go to your [Netlify plugins](https://app.netlify.com/plugins) and click **Options > Uninstall plugin**.
+
+<Callout type="info">
+  This doesn't remove your data on Algolia, you can [manage your data on your Algolia dashboard](https://dashboard.algolia.com/dashboard).
+If you don't want to use Algolia anymore you can also [delete your Algolia account](https://support.algolia.com/hc/en-us/articles/4406981837457-How-do-I-delete-my-account-).
+</Callout>

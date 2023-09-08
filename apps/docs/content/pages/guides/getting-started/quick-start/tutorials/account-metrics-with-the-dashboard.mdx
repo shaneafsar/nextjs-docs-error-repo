@@ -1,0 +1,142 @@
+---
+navigation: "default"
+
+title: |-
+  Track usage and performance in the dashboard
+description: |-
+  Get metrics for your Algolia app from the dashboard, to track usage and performance.
+slug: guides/getting-started/quick-start/tutorials/account-metrics-with-the-dashboard
+---
+
+The Algolia dashboard presents key information about performance and usage activity. You can use it to get a good understanding of the activity on your Algolia account—like knowing what your users are doing,
+and how fast, and what sort of API operations are being performed.
+All this provides an open window into your API usage.
+
+This information helps you in two significant ways.
+First, to help you tweak your data and index configurations to achieve greater relevance,
+speed, and efficiency. Secondly, to offer you a simple way to monitor the billable activity of your account.
+
+This tutorial will focus on the API Monitoring Section. If you aren't familiar with the dashboard,
+see [Getting started with the dashboard](/guides/getting-started/quick-start/tutorials/getting-started-with-the-dashboard/).
+
+<Callout type="info">
+  As you go through this tutorial, you may want to experiment with different
+  searches and indexing operations to help make these metrics concrete and
+  meaningful. You can do this with your API or within the Indexing section of
+  the dashboard.
+</Callout>
+
+## Performance metrics
+
+Performance is a good place to start—click **API Monitoring** in the sidebar, then go to the **Performance** section.
+
+<Media type="image" id="tutorials/dashboard-section-click.jpg" alt="" />
+
+On this page you'll see a full view of the number and speeds of your search operations. These figures are broken into 90% and 99% percentiles.
+You can also view graphs over a day, divided into hours, over the past month, and over the past year.
+Note that the speeds measured here are the times it takes the Algolia server to process a search request.
+
+<Media type="image" id="tutorials/dashboard-search-response-time.jpg" alt="" />
+
+The Queries per Second view can be used to check whether large user search activity has any impact on performance.
+
+### Measuring speed
+
+Algolia measures performance in milliseconds.
+Larger values might indicate a performance problem.
+Additionally, since processing time only measures the speed of the Algolia servers,
+you need to add network latency and frontend display times to measure the full user experience.
+Delivering the best UX means that the total time, from keystroke to displaying search results, should be less than 100 ms,
+as this delivers a real search as you type experience.
+Thus, with this 100 ms benchmark, and an average latency of 70 ms, the engine's processing time should be no greater than 30 ms,
+and ideally a lot lower.
+
+## Usage activity
+
+You can see your total number of records, as well as the number of search and indexing operations performed during the current billing cycle, under the **Usage** tab. The _Records_ graph shows your total number of records. Whether you have a monthly or annual subscription, these figures will always reflect your monthly usage.
+which will be used to generate an invoice at the end of your billing cycle.
+
+<Media type="image" id="tutorials/dashboard-tab-1-usage.jpg" alt="" />
+
+In this section, you have as well a variety of timelines that trace your API usage.
+These too are broken down by hour, day, and month, for up to a year.
+The first of these displays the fluctuations of your total indices size over a fixed period of time.
+The remaining timelines display the execution count of nearly every operation within the API.
+These latter timelines are divided into seven kinds of operations: search, indexing, record, ACL, synonyms, rules, and Recommend - each of which are further divided into their associated API function calls.
+
+As an example, look at the "Records Operations" graph. On the top left, you see 7 record-based operations: **Get**, **Add**, **Batch**, **Delete**, **Partial update**, **Update** and **Delete by Query**.
+
+<Media type="image" id="tutorials/dashboard-records-operations.jpg" alt="" />
+
+To make things easier, you can also hover your mouse over the timeline to get a tooltip snapshot of all related operations for that particular hour, day, or month.
+
+<Callout type="info">
+  Note that usage statistics don't include indexing operations on **replicas**,
+  because keeping replicas in sync is done internally by the Algolia engine.
+</Callout>
+
+## Status section
+
+Up to this point, this guide has described the performance and activity of your API usage.
+The next sections discuss infrastructure, specifically the latency and processing speeds of your servers, clusters, and DSNs.
+
+### Latency averages
+
+The first page provides a graphical view of average latency times,
+with a coloring system to immediately alert you to the working state of your clusters and servers.
+If you have more than one cluster, or any [DSNs](https://support.algolia.com/hc/en-us/articles/4406981938193-What-is-DSN-How-does-it-work-),
+these will be viewable as separate graphs. To see clusters or [Distributed Search Network (DSN)](/guides/scaling/distributed-search-network-dsn/) node statistics independently, open the corresponding tab in the **Your Server** section.
+
+The latency figures on this first page are a _total average_ of the individual averages described below.
+You can hover over the graph's timeline and trace the availability in percent, calculated every 10-minutes.
+
+<Media type="image" id="tutorials/dashboard-tab-4-summary.png" alt="" />
+
+### Colors
+
+Algolia uses [clusters](https://support.algolia.com/hc/en-us/articles/4406975242129-What-is-a-cluster-) to process every indexing
+and search operation. This is primarily done for redundancy reasons: if one server goes down,
+there is no impact on search and indexing operations,
+the cluster remains at 100% availability (<span style={{color: 'green'}}>**green**</span>).
+Furthermore, if a second server goes down, the remaining server still processes search requests (100%),
+but no indexing operations (<span style={{color: 'gold'}}>**yellow**</span>).
+In this situation, indexing operations are queued, to be executed only after the cluster returns to its green state.
+Finally, if all 3 servers are down, the cluster is down and the indicator turns <span style={{color: 'red'}}>**red**</span>.
+
+As previously mentioned, measures are done in 10-minute intervals, so a cluster's availability (color) can change every 10 minutes.
+
+This map displays the worldwide location of Algolia's _probes_. To understand the latency calculations,
+you'll need to understand what these probes do. Algolia currently has 30 computers (probes) strategically positioned all
+over the world to measure regional latency speeds. How this works is as follows. Each probe performs the following 2 operations.
+
+1. Sends a signal to every server in every cluster, and measures how long it takes to receive a response. This is the Ping test.
+2. Makes a simple API request and also waits for a response. This is called the API test.
+
+The ping test is designed to test simple computer-to-computer speeds.
+The API test goes a step further and tests not only the response time but also the functioning state of the server.
+For example, if a server can't perform a simple indexing operation, or if the processing time slows down the response, there is a problem.
+
+## Other features
+
+### Latest operations
+
+In the **Search API Logs** section, you can watch as operations are being executed on Algolia's servers, in a continuous, real-time scroll.
+
+<Media type="image" id="tutorials/dashboard-latest-operations.jpg" alt="" />
+
+### Alerts
+
+You can configure two types of alerts.
+
+<Media type="image" id="tutorials/dashboard-tab-alerts.jpg" alt="" />
+
+_Status_, where you set up either an email or a phone number to receive incident reports as they occur.
+The kinds of incidents reported are discussed in the [API Status](#status-section) section.
+
+_Capacity_, where you set up one or more Capacity Alerts to warn you _before_ your servers overflow
+on memory and CPU usage. As you can see, the threshold for each metric can be configured.
+Take a look at the tutorial on [How to set up capacity alerts](/guides/scaling/servers-clusters/how-to/how-to-receive-capacity-alerts-from-my-dedicated-servers/).
+
+<Callout type="info">
+  **Only plans with dedicated servers** can receive capacity alerts.
+</Callout>

@@ -1,0 +1,110 @@
+---
+navigation: "netlify"
+
+title: |-
+  Quickstart
+description: |-
+  Add fast and relevant search to your Netlify site.
+slug: tools/crawler/netlify-plugin/quick-start
+---
+
+
+The Algolia for Netlify plugin lets you add fast and relevant search experiences to your Netlify site.
+**All you need is an existing Netlify site.**
+
+## Link your site to Algolia
+
+1. Go to [Algolia Crawler for Netlify](https://crawler.algolia.com/admin/netlify) and click **Sign in to Algolia with Netlify**.
+   If you don't have an Algolia account yet, Algolia creates a new account for you.
+
+    <Media type="image" id="tools/crawler/guides/netlify/signin.png" alt="" />
+
+1. Allow Algolia to access your Netlify account,
+   so that the plugin can update your plugin settings and add environment variables.
+
+   <Media type="image" id="tools/crawler/guides/netlify/authorize.jpg" alt="" />
+
+1. In the [Crawler Admin Console](https://crawler.algolia.com/admin/netlify), search for your site and click **Install**.
+   Algolia adds the necessary environment variables to your Netlify site. These environment variables start with `ALGOLIA_`.
+
+
+   Algolia also creates a new application for your site with a dedicated [Free plan](https://www.algolia.com/pricing/).
+
+
+   <Media type="image" id="tools/crawler/guides/netlify/search-site.jpg" alt="" />
+
+1. Confirm by clicking **Install plugin**.
+
+   <Media type="image" id="tools/crawler/guides/netlify/accept-install.jpg" alt="" />
+
+The plugin is now installed and ready to index your site.
+
+<Media type="image" id="tools/crawler/guides/netlify/installed.jpg" alt="" />
+
+## Indexing
+
+After installing the plugin, each Netlify deploy triggers a crawl, which updates an Algolia index.
+You can manually trigger a new deploy in Netlify by clicking **Retry deploy > Deploy site** on any deploy.
+
+When it receives a build hook, the Algolia Crawler processes your website asynchronously.
+This operation takes some time, so there is a short delay between the first deploy and the first crawl.
+**Your site and your Algolia index are out of sync during that delay.**
+
+You can find information about your current crawler in the [Netlify deploy logs](https://docs.netlify.com/monitor-sites/logs/#deploy-log).
+
+<Callout type="info">
+  By default, Algolia indexes the `main` or `master` branch.
+Algolia can still create one crawler with one index per git branch.
+This lets you use a production index on `main` and development index on `develop`.
+To enable multiple branches, you need to configure the [`branches` plugin input](/tools/crawler/netlify-plugin/plugin/#parameter-param-branches).
+If you're using the Algolia for Netlify [frontend library](#install-the-frontend-bundle),
+you need to [pass the branch name](/tools/crawler/netlify-plugin/front-end/#using-multiple-branches) in the library parameters.
+</Callout>
+
+<Media type="image" id="tools/crawler/guides/netlify/deploy-logs.jpg" alt="" />
+
+You can click the crawler URL to follow the progress of your crawl.
+
+<Media type="image" id="tools/crawler/guides/netlify/crawler-overview.png" alt="" />
+
+Once the crawl is complete, you can check your Algolia index with the extracted records.
+Algolia applies a default relevance configuration to your index, which you can adapt in the index settings.
+
+To learn more about what's inside the Algolia records, see [Extraction strategy](/tools/crawler/netlify-plugin/extraction-strategy/)
+
+<Media type="image" id="tools/crawler/guides/netlify/algolia-index.jpg" alt="" />
+
+## Install the frontend bundle
+
+You can install a frontend bundle for searching in your Algolia index and navigating the search results.
+You can find the code snippet in your [Crawler Admin Console](https://crawler.algolia.com/admin/netlify).
+Make sure to replace these variable placeholders:
+
+| `YOUR_ALGOLIA_APP_ID` | The unique identifier of your Algolia application |
+| `YOUR_ALGOLIA_API_KEY` | Your [Algolia search-only API key](https://dashboard.algolia.com/account/api-keys/) |
+| `YOUR_NETLIFY_SITE_ID` | The unique identifier of your Netlify site (Algolia includes this for you in the snippet from the [Crawler Admin Console](https://crawler.algolia.com/admin/netlify)) |
+| `YOUR_TARGET_GIT_BRANCH` | Your target git branch, either a fixed branch, like `main`, or a dynamic branch using an environment variable `process.env.HEAD`. For more information, see [Using multiple branches](/tools/crawler/netlify-plugin/front-end/#using-multiple-branches).
+
+```html
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/@algolia/algoliasearch-netlify-frontend@1/dist/algoliasearchNetlify.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/@algolia/algoliasearch-netlify-frontend@1/dist/algoliasearchNetlify.js"></script>
+
+```
+
+This code snippet adds [Algolia Autocomplete](/ui-libraries/autocomplete/introduction/what-is-autocomplete/) to the `<div id="search">` element.
+You can use this autocomplete menu to search your Algolia index for this site, and navigate to the search results.
+For more information about configuring the autocomplete menu, see [Frontend configuration](/tools/crawler/netlify-plugin/front-end/).
+
+<Media type="image" id="tools/crawler/guides/netlify/frontend.jpg" alt="" />
+
+<Callout type="info">
+  The frontend bundle works with the records Algolia extracts from your site.
+If you want to build a custom user interface, see [How to build a custom user interface](/tools/crawler/netlify-plugin/netlify-faq/#how-to-build-a-custom-user-interface).
+</Callout>
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>

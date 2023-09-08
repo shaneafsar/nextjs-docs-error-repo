@@ -1,0 +1,226 @@
+---
+navigation: "default"
+
+title: |-
+  Search Jira data
+description: |-
+  Import & sync data between Jira & Algolia and build search on top of your Jira account.
+slug: guides/sending-and-managing-data/send-and-update-your-data/tutorials/jira-algolia
+---
+
+
+
+
+## Introduction
+
+Indexing data from Jira in Algolia is a convenient way to search through content like projects, issues, users, tasks, etc.
+In this tutorial, you will learn how to quickly import and synchronize Jira objects in Algolia, using Node.js:
+- Getting an Atlassian API token
+- Fetching all projects from the Jira API
+- Indexing them to Algolia
+
+For this, we'll use the [Jira Cloud Rest API v3](https://developer.atlassian.com/cloud/jira/platform/rest/v3/).
+
+
+## Prerequisites
+
+### Familiar with Node.js
+
+This tutorial assumes you are familiar with Node.js, how it works, and how to create and run Node.js scripts. If you want to learn more before going further, we recommend you read the following resources:
+
+- [Node.js Getting Started Guide](https://nodejs.org/en/docs/guides/getting-started-guide/)
+- [Node.js Docs](https://nodejs.org/en/docs/)
+
+Also, you need to [install Node.js](https://nodejs.org/en/) in your environment.
+
+### Have a Jira and Algolia account
+
+For this tutorial, we assume that you:
+
+- already have a [Jira account](https://www.atlassian.com/software/jira), and want to index your project objects,
+- already created an [Algolia account](https://dashboard.algolia.com/dashboard). If not, you can [create an account](https://dashboard.algolia.com/users/sign_up).
+
+## Install dependencies
+
+You need to connect to your Algolia account. For that, you can use our Algolia Search library. We'll also install Request to make HTTP calls.
+
+Let's add these dependencies to your project by running the following command in your terminal:
+
+```sh
+npm install algoliasearch request
+```
+
+## Getting an Atlassian API token
+
+To access the Jira Cloud REST API, you need to authenticate each HTTP request you make by including an Atlassian API token. You can create a new API token by following the [instructions from Atlassian](https://confluence.atlassian.com/cloud/api-tokens-938839638.html).
+
+## Fetching all projects from JIRA
+
+Now that you have your token, you can make a request to the Jira Cloud REST API [Get all projects](https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-api-3-project-get) endpoint.
+
+```js
+const request = require('request');
+
+const options = {
+  method: 'GET',
+  url: 'https://your-domain.atlassian.net/rest/api/3/project',
+  auth: { username: 'email@example.com', password: 'your-atlassian-token' },
+  headers: { Accept: 'application/json' }
+};
+
+request(options, (err, { statusCode } = {}, body) => {
+  if (err || statusCode !== 200) throw err;
+  const projects = JSON.parse(body);
+});
+```
+
+Make sure you replace `your-domain` with your actual domain, `email@example.com` with your username, and `your-atlassian-token` with the API Token you generated earlier.
+
+## Importing your Jira projects into Algolia
+
+Now that you've retrieved your Jira objects, you can create a script to index them into Algolia. You'll likely want to be able to update and delete the project records later, so you need to specify an `objectID` for each of them:
+
+```js
+const records = projects.map(project =>
+  Object.assign({}, project, { objectID: project.id })
+);
+```
+
+Now you can index your `records` array in Algolia:
+
+```js
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey');
+const index = client.initIndex('YourIndexName');
+
+index.saveObjects(records).then(() => {
+  // done
+})
+```
+
+You just indexed your Jira projects into Algolia! You can already search them in your Algolia dashboard. You can also use Algolia's [Search UI Libraries](/guides/building-search-ui/what-is-instantsearch/js/) to implement a frontend search experience and make your Jira data searchable anywhere you want.
+
+## Keeping Algolia in sync with Jira
+
+Your Jira projects will change over time. For that reason, you may want to periodically fetch the latest data from Jira and update the corresponding records in your Algolia index. Algolia provides several ways to accomplish this.
+
+### Atomic reindexing
+
+The first way to keep data in sync is to periodically re-import all records. You can do it by re-running the script from this tutorial (e.g., once a month), thus fetching all your Jira `projects` each time, formatting them and uploading them to Algolia. This process would overwrite all existing records in your index.
+
+You need to adapt your existing script to achieve this process. You could add a bit of conditional logic, allowing the user to call the script with a flag to either index data for the first time, or atomically reindex on top of existing data.
+
+For example, you could call your script with an `--atomic` flag:
+
+```sh
+node index.js --atomic
+```
+
+You can use the global `process.argv` property to access any user input params, and store a boolean to indicate whether your script should index normally or atomically.
+
+```js
+const atomicFlag = process.argv.slice(2).includes('--atomic');
+```
+
+While much of your original script should remain unchanged, you want to be able to conditionally trigger the atomic reindexing logic (for instance, as a separate function) whenever you pass the `--atomic` flag.
+
+```js
+const atomicallyReindexData = (client, {indexName}, objects) => {
+  client.initIndex(indexName).replaceAllObjects(objects);
+}
+```
+
+For code hygiene, you can refactor your original indexing block into its own function as well:
+
+```js
+const indexData = (index, data) => {
+  // Index Jira project objects in Algolia
+  index.saveObjects(records).then(() => {
+    // done
+  });
+}
+```
+
+Then, you can refactor the request logic of your original script to accommodate your new conditional check.
+
+```js
+const start = () => {
+  // Retrieve Jira projects
+  request(options, (err, { statusCode } = {}, body) => {
+    if (err || statusCode !== 200) throw err;
+    const projects = JSON.parse(body);
+    // Add object ID property to each project
+    const records = projects.map(project =>
+      Object.assign({}, project, { objectID: project.id })
+    );
+    // Index or reindex atomically depending on the use of --atomic flag
+    if (atomicFlag) atomicallyReindexData(client, index, records);
+    else indexData(index, records);
+  });
+}
+```
+
+This approach is usually the preferred one when you don't have much data, or when you don't update it frequently.
+
+### Incremental updates
+
+The second way to keep data in sync is to selectively reindex records as the original objects change in Jira. In other words, if you update a Jira project, this would trigger a reindexing of only that record into Algolia. To accomplish this, you can leverage the [`partialUpdateObjects`](/api-reference/api-methods/partialUpdateObjects) method. [Jira Webhooks](https://developer.atlassian.com/server/jira/platform/webhooks/) could come in handy to set up such a workflow. To know more, read our [incremental updates](/guides/sending-and-managing-data/send-and-update-your-data/how-to/incremental-updates/) tutorial.
+
+### Batching records
+
+Whatever strategy you pick, we recommend [sending records in batches](/guides/sending-and-managing-data/send-and-update-your-data/how-to/sending-records-in-batches/) for optimal performances. To learn more about keeping data in sync, read our [guides on synchronization](/guides/sending-and-managing-data/send-and-update-your-data/).
+
+## Putting it all together
+
+Gathering all above steps together, including atomic reindexing, in a single script, you get something like this:
+
+```js
+const request = require('request');
+const algoliasearch = require('algoliasearch');
+
+const atomicFlag = process.argv.slice(2).includes('--atomic');
+
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey');
+const index = client.initIndex('YourIndexName');
+
+const options = {
+  method: 'GET',
+  url: 'https://your-domain.atlassian.net/rest/api/3/project',
+  auth: { username: 'email@example.com', password: 'your-atlassian-token' },
+  headers: { Accept: 'application/json' }
+};
+
+const start = () => {
+  // Retrieve Jira projects
+  request(options, (err, {statusCode}, body) => {
+    if (err || statusCode !== 200) throw err;
+    const projects = JSON.parse(body);
+    // Add object ID property to each project
+    const records = projects.map(project =>
+      Object.assign({}, project, { objectID: project.id })
+    );
+    // Index or reindex atomically depending on the use of --atomic flag
+    if (atomicFlag) atomicallyReindexData(client, index, records);
+    else indexData(index, records);
+  });
+};
+
+const indexData = (index, data) => {
+  // Index Jira project objects in Algolia
+  index.saveObjects(records);
+}
+
+const atomicallyReindexData = (client, {indexName}, objects) => {
+  client.initIndex(indexName).replaceAllObjects(objects);
+}
+
+start();
+```
+
+## Conclusion
+
+There are many ways to improve and go beyond this example. Here are some ideas:
+
+- [Configure relevance settings](/guides/managing-results/relevance-overview/) of your index to improve the ranking/display of search results.
+- Index more content sources from Jira, such as [issues](https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-api-3-issue-post), [users](https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-api-3-user-get), or [tasks](https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-api-3-task-taskId-get).
+- Build an [InstantSearch](/guides/building-search-ui/what-is-instantsearch/js/) search experience to make your Jira content searchable by your teammates.

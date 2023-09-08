@@ -1,0 +1,504 @@
+---
+navigation: "default"
+
+title: |-
+  Importing with the API
+description: |-
+  How to index your data to Algolia using an API client.
+slug: guides/sending-and-managing-data/send-and-update-your-data/how-to/importing-with-the-api
+---
+
+
+Algolia doesn't directly search your data sources. Instead, you upload the parts of your data that are relevant for search to Algolia. Algolia stores this data in an _index_: a data structure optimized for fast search.
+
+- For more information about preparing your data for indexing, see [Format and structure your data](/guides/sending-and-managing-data/prepare-your-data/).
+- For alternatives to the API for pushing data, see [Send your data to Algolia](/guides/sending-and-managing-data/send-and-update-your-data/).
+
+## Required credentials
+
+To send data to Algolia, you need an Application ID and a valid API key (with [`addObjects`](/guides/security/api-keys/#access-control-list-acl) permission). You can find them in the **API Keys** section of [Algolia's dashboard](https://dashboard.algolia.com/account/api-keys/all).
+
+### Application ID
+
+Your Application ID is what Algolia uses to identify your app, where all your indices live.
+
+### API key
+
+[API keys](/guides/security/api-keys/) control access to Algolia's API and determine what you're allowed to do, such as searching an index, or adding new records. For better security, create specific API keys with minimal [permissions](/guides/security/api-keys/#access-control-list-acl) for indexing tasks, which you should only use in server-side code. Keep your indexing API keys secret.
+
+**Only use the [Admin API key](/guides/security/api-keys/#admin-api-key) to create other API keys**. Don't use the Admin API key in your apps.
+
+
+## Set up the API client
+
+First, you need to install and set up your API client. For installation instructions, go to the API client documentation for your programming language:
+
+<div class="mt-16">
+{/* Partial: rest/images.erb */}
+</div>
+
+After installing the API client, you can initialize it and connect to Algolia:
+
+
+
+## Fetch your data
+
+Before sending anything to Algolia, **you need to retrieve your data**. You can do this in several ways, depending on the nature of your app. Here are potential examples:
+
+### From a database
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```scala
+def fetchDataFromDatabase(): Iterable[Actor] = {
+  val actors = // Fetch data from your database
+  actors
+}
+
+val actors = fetchDataFromDatabase()
+```
+
+    
+    ```go
+func fetchDataFromDatabase() []Actor {
+  actors := // Fetch data from your database
+  return actors
+}
+
+func main() {
+  records := fetchDataFromDatabase()
+}
+```
+
+    
+    ```java
+public List<Actor> fetchDataFromDatabase() {
+  List<Actor> actors = // Fetch data from your database
+  return actors;
+}
+
+List<Actor> actors = fetchDataFromDataBase();
+```
+
+    
+    ```csharp
+public IEnumerable<Actor> FetchDataFromDataBase() {
+  IEnumerable<Actor> actors = // Fetch data from your database
+  return actors;
+}
+
+var actors = FetchDataFromDataBase();
+```
+
+    
+    ```kotlin
+  fun fetchFromDatabase(): List<Actor> {
+      val actors: List<Actor> = listOf() // Fetch data from your database
+
+      return actors
+  }
+
+  val actors: List<Actor> = fetchFromDatabase()
+```
+
+    
+    ```swift
+func fetchDataFromDataBase() -> [[String: Any]] {
+  let records = // Fetch data from your database
+  return records
+}
+
+let records = fetchDataFromDataBase()
+```
+
+    
+    ```python
+def fetch_data_from_database():
+  actors = # Fetch data from your database
+  return actors
+
+actors = fetch_data_from_database()
+```
+
+    
+    ```js
+const fetchDataFromDatabase = () => {
+  const actors = // Fetch data from your database
+  return actors;
+}
+
+const records = fetchDataFromDatabase();
+```
+
+    
+    ```php
+function fetchDataFromDatabase() {
+  $actors = // Fetch data from your database
+  return $actors;
+}
+
+$records = fetchDataFromDatabase();
+```
+
+    
+    ```ruby
+def fetch_data_from_database
+  Actors.all # Fetch data from your database
+end
+```
+
+</CodeSnippetGroup>
+
+
+
+### From a file
+
+You can use this [actors dataset](https://github.com/algolia/datasets/blob/master/movies/actors.json) to test this out.
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```scala
+import org.json4s._
+import org.json4s.native.JsonMethods._
+
+case class Actor(name: String,
+                 rating: Int,
+                 image_path: String,
+                 alternative_path: Option[String],
+                 objectID: String)
+
+object Main {
+
+  def main(args: Array[String]): Unit = {
+
+    val json = parse(new FileInputStream("actors.json")).extract[Seq[Actor]]
+
+  }
+
+}
+```
+
+    
+    ```go
+package main
+
+import (
+  "encoding/json"
+  "io/ioutil"
+)
+
+type Actor struct {
+  Name            string `json:"name"`
+  Rating          int    `json:"rating"`
+  ImagePath       string `json:"image_path"`
+  AlternativeName string `json:"alternative_name"`
+  ObjectID        string `json:"objectID"`
+}
+
+func main() {
+  var actors []Actor
+  data, _ := ioutil.ReadFile("actors.json")
+  _ = json.Unmarshal(data, &actors)
+}
+```
+
+    
+    ```java
+import java.io.FileInputStream;
+import java.io.InputStream;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class Actor {
+    // Getters/Setters ommitted
+    private String name;
+    private String objectID;
+    private int rating;
+    private String imagePath;
+    private String alternativePath;
+}
+
+ObjectMapper objectMapper = Defaults.getObjectMapper();
+
+InputStream input = new FileInputStream("actors.json");
+Actor[] actors = objectMapper.readValue(input, Actor[].class);
+```
+
+    
+    ```csharp
+using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
+
+public class Actor
+{
+  public string Name { get; set; }
+  public string ObjectID { get; set; }
+  public int Rating { get; set; }
+  public string ImagePath { get; set; }
+  public string AlternativePath { get; set; }
+}
+
+SearchClient client = new SearchClient("YourApplicationID", "YourWriteAPIKey");
+SearchIndex index = client.InitIndex("actors");
+
+// Don't forget to set the naming strategy of the serializer to handle Pascal/Camel casing
+// Or you can set JsonProperty(PropertyName = "")] attribute on each field
+var settings = new JsonSerializerSettings
+{
+  ContractResolver = new DefaultContractResolver
+  {
+      NamingStrategy = new CamelCaseNamingStrategy()
+  }
+});
+
+IEnumerable<Actor> actors = JsonConvert.DeserializeObject<IEnumerable<Actor>>(File.ReadAllText("actors.json"), settings);
+```
+
+    
+    ```kotlin
+@Serializable
+data class Actor(
+    val name: String,
+    val rating: Int,
+    val imagePath: String,
+    val alternativePath: String,
+    override val objectID: ObjectID
+) : Indexable
+
+val string = File("actors.json").readText()
+val actors: List<Actors> = Json.plain.parse(Actor.serializer().list, string)
+```
+
+    
+    ```swift
+let filePath = Bundle.main.path(forResource: "actors", ofType: "json")!
+let contentData = FileManager.default.contents(atPath: filePath)!
+let records = try! JSONSerialization.jsonObject(with: contentData, options: []) as! [[String: Any]]
+```
+
+    
+    ```python
+import json
+
+with open('actors.json') as f:
+    records = json.load(f)
+```
+
+    
+    ```js
+const records = require('./actors.json');
+```
+
+    
+    ```php
+$records = json_decode(file_get_contents('actors.json'), true);
+```
+
+    
+    ```ruby
+require 'json'
+
+file    = File.read('actors.json')
+records = JSON.parse(file)
+```
+
+</CodeSnippetGroup>
+
+
+
+### From the source code directly
+
+Only use this method for exploration purposes or if you have a small amount of data.
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```scala
+case class Person(name: String)
+
+val records = Seq(
+  Person("Tom Cruise"),
+  Person("Scarlett Johansson"),
+)
+```
+
+    
+    ```go
+actors := []Actor{
+  {Name: "Tom Cruise"},
+  {Name: "Scarlett Johansson"},
+}
+```
+
+    
+    ```java
+ public class Person {
+
+   private String name;
+
+   public Person() {}
+
+   public String getName() {
+     return name;
+   }
+
+   public Person setName(String name) {
+     this.name = name;
+     return this;
+   }
+ }
+
+ ArrayList<Person> persons = new ArrayList<Person>() {{
+    add(new Person().setName("Tom Cruise"));
+    add(new Person().setName("Scarlett Johansson"));
+ }};
+```
+
+    
+    ```csharp
+public class Actor
+{
+  public string Name { get; set; }
+}
+
+ var records = new List<Actor>
+ {
+    new Actor { Name = "Tome Cruise" },
+    new Actor { Name = "Scarlett Johansson" }
+ };
+```
+
+    
+    ```kotlin
+val records = listOf(
+    json { "name" to "Tom Cruise" },
+    json { "name" to "Scarlett Johansson" }
+)
+```
+
+    
+    ```swift
+let records: [[String: Any]] = [
+  ["name": "Tom Cruise"],
+  ["name": "Scarlett Johansson"]
+]
+```
+
+    
+    ```python
+records = [
+    {'name': 'Tom Cruise'},
+    {'name': 'Scarlett Johansson'}
+]
+```
+
+    
+    ```js
+const records = [
+  { name: 'Tom Cruise' },
+  { name: 'Scarlett Johansson' },
+];
+```
+
+    
+    ```php
+$records = [
+  ['name' => 'Tom Cruise'],
+  ['name' => 'Scarlett Johansson']
+];
+```
+
+    
+    ```ruby
+records = [
+  { name: 'Tom Cruise' },
+  { name: 'Scarlett Johansson' }
+]
+```
+
+</CodeSnippetGroup>
+
+
+
+## Send the data to Algolia
+
+Once the records are ready, you can push them to Algolia using the [`saveObjects`](/api-reference/api-methods/saveObjects) method.
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```scala
+client.execute {
+  index into "your_index_name" objects records
+}
+```
+
+    
+    ```go
+index.SaveObjects(records, opt.AutoGenerateObjectIDIfNotExist(true))
+```
+
+    
+    ```java
+index.saveObjects(records);
+```
+
+    
+    ```csharp
+index.SaveObjects(records, autoGenerateObjectId: true);
+```
+
+    
+    ```kotlin
+index.saveObjects(records)
+```
+
+    
+    ```swift
+index.saveObjects(records)
+```
+
+    
+    ```python
+index.save_objects(records,  {'autoGenerateObjectIDIfNotExist': True})
+```
+
+    
+    ```js
+index.saveObjects(records, { autoGenerateObjectIDIfNotExist: true });
+```
+
+    
+    ```php
+$index->saveObjects($records, ['autoGenerateObjectIDIfNotExist' => true]);
+```
+
+    
+    ```ruby
+index.save_objects(records, { autoGenerateObjectIDIfNotExist: true })
+```
+
+</CodeSnippetGroup>
+
+
+
+### Send your data in batches
+
+For performance reasons, you should send several records at once instead of one by one. If you have many records to index, you should [send them in batches](/guides/sending-and-managing-data/send-and-update-your-data/how-to/sending-records-in-batches/).
+
+Once you're done, you can [configure relevance settings](/guides/managing-results/relevance-overview/).

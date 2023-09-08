@@ -1,0 +1,93 @@
+---
+navigation: "cli"
+title: |-
+  algolia profile
+description: |-
+  Manage your profiles
+slug: tools/cli/commands/algolia-profile
+---
+
+## algolia profile add
+
+Add a new profile configuration to the CLI
+
+### Usage
+
+`algolia profile add [flags]`
+
+### Examples
+
+Add a new profile (interactive)
+
+```sh
+algolia profile add
+```
+
+Add a new profile (non-interactive) and set it to default
+
+```sh
+algolia profile add --name "my-profile" --app-id "my-app-id" --admin-api-key "my-admin-api-key" --default
+```
+
+### Flags
+
+- `--admin-api-key`: Admin API Key of the application.
+
+- `--app-id`: ID of the application.
+
+- `-d`, `--default`: Set the profile as the default one.
+
+- `-n`, `--name`: Name of the profile.
+
+## algolia profile list
+
+List the configured profile(s)
+
+### Usage
+
+`algolia profile list [flags]`
+
+### Examples
+
+List the configured profiles
+
+```sh
+algolia profile list
+```
+
+## algolia profile remove
+
+Remove the specified profile
+
+### Usage
+
+`algolia profile remove <profile> [flags]`
+
+### Examples
+
+Remove the profile named "my-app" from the configuration
+
+```sh
+algolia profile remove my-app
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+## algolia profile setdefault
+
+Set the default profile
+
+### Usage
+
+`algolia profile setdefault <profile> [flags]`
+
+### Examples
+
+Set the default profile to "my-app"
+
+```sh
+algolia profile setdefault my-app
+```
+

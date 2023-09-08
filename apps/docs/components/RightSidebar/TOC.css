@@ -1,0 +1,57 @@
+.mobile-container > .mobile-header::marker,
+.mobile-container > .mobile-header::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-container[open] > .mobile-header svg {
+  transform: rotate(180deg);
+}
+
+.mobile-header {
+  display: block;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-header-content {
+  display: flex;
+  align-items: center;
+  max-width: 80ch;
+}
+
+.toggle {
+  border-radius: 4px;
+  border: 1px solid theme("colors.gray-600");
+  padding: 0.25rem 0.75rem;
+  padding-inline-end: 0.5rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.dark .toggle {
+  border-color: theme("colors.xenon-100");
+}
+
+.toggle > h2 {
+  margin-bottom: 0;
+}
+
+li.current-heading::before {
+  content: " ";
+  position: absolute;
+  left: -1rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: theme("colors.xenon-800");
+  border-radius: 4px;
+}
+
+.dark li.current-heading::before {
+  background-color: theme("colors.xenon-100");
+}

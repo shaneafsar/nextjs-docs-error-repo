@@ -1,0 +1,122 @@
+---
+navigation: "default"
+
+title: |-
+  Copy indices
+description: |-
+  Learn how to copy indices including their records, settings, synonyms, and rules.
+slug: guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/copy-indices
+---
+
+
+You can copy, or, duplicate whole indices, including records, settings, synonyms, and rules.
+You can copy indices within an Algolia application in the dashboard and with the API.
+If you want to [copy an index between two Algolia applications](#copy-indices-between-different-applications), you can use the API.
+
+Copying an index [doesn't copy the associated analytics data](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/concepts/indices-analytics/).
+
+<Callout type="info">
+  Copying an index is resource-intensive and is
+[rate-limited](https://support.algolia.com/hc/en-us/articles/4406975251089#when-do-we-trigger-the-rate-limit).
+</Callout>
+
+## Copy indices in the Algolia dashboard
+
+Copying an index duplicates the records and configuration,
+including synonyms and rules of an existing index (except the `enableReRanking` setting).
+
+To copy or duplicate an index in the dashboard:
+
+<Echo name="common/dashboard"/>
+
+1. Select **Manage index > Duplicate**.
+
+   <Media type="image" id="guides/indexing/copy-indices.png" alt="" />
+
+1. Select **Create a new index** or **Overwrite an existing index** and enter the name of the destination index.
+
+1. Enter `DUPLICATE` to confirm (if you're overwriting an existing index) and click **Duplicate**.
+
+## Copy indices with the API
+
+To copy indices, use one of these methods:
+
+- API clients: [`copyIndex`](/api-reference/api-methods/copyIndex)
+- Algolia CLI: [`algolia indices copy`](/tools/cli/commands/algolia-indices/#algolia-indices-copy)
+
+By providing a [`scope`](/api-reference/api-methods/copyIndex/#method-param-scope) parameter or command-line option,
+you can choose what you want to copy: records, settings, synonyms, or rules.
+
+Copying an index has no impact on Analytics, because you can't copy an index's analytics data.
+The **API keys** of the source are merged with the existing keys in the destination index.
+
+### Copy indices fully
+
+To copy an index **including records, settings, synonyms, and Rules**,
+use the [`copyIndex`](/api-reference/api-methods/copyIndex) method without arguments:
+
+
+
+If an index with the new name already exists, it's overwritten after the renaming.
+
+<Callout type="warning">
+  To prevent overwriting existing indices,
+you can check if an index exists with the [`indexExists`](/api-reference/api-methods/indexExists) method.
+</Callout>
+
+If the source index doesn't exist, [`copyIndex`](/api-reference/api-methods/copyIndex) creates an empty index with zero records under the new name.
+To prevent this, you can also use the [`indexExists`](/api-reference/api-methods/indexExists) method to see if the source index exists before copying.
+
+### Copy indices partially
+
+To copy **parts of an index**, you can use the [`scope`](/api-reference/api-methods/copyIndex/#method-param-scope) parameter.
+For example, to copy only the synonyms and settings (but not records or Rules) between indices:
+
+
+
+If you use the `scope` parameter, records aren't copied to the new index.
+Existing items of the scope are replaced. Items belonging to other scopes are preserved.
+For example, if you use the `settings` scope, only the settings are copied to the destination index,
+keeping the records, synonyms, and Rules.
+
+For more information, see [Scopes](/api-reference/api-methods/copy-index/#scopes).
+
+### Indices with replicas
+
+Copying a source index that has replicas copies the index's data, but not its replicas.
+The destination index won't have replicas.
+
+**You can't copy to a destination index that already has replicas.**
+
+## Copy indices between different applications
+
+To copy an index between different Algolia applications,
+use the `AccountClient`, which is part of the [Algolia API clients](/api-client/getting-started/install/php/),
+or use the Algolia CLI.
+
+<div data-controller="language-specific-content" data-language="javascript">
+
+For JavaScript, the `AccountClient` is distributed as a separate package `@algolia/client-account`.
+You can install it from npm:
+
+```sh
+npm install @algolia/client-account
+```
+
+</div>
+
+
+
+<Callout type="warning">
+  If you copy an index to a different Algolia application,
+the `targetIndex` **must not** exist, or the process fails.
+</Callout>
+
+If you want to _move_ an index between Algolia applications,
+you can copy it first, and then [delete](/guides/sending-and-managing-data/manage-indices-and-apps/manage-indices/how-to/delete-indices/) it.
+
+## Copy index settings
+
+If you want to copy only an index's setting to another index, you can use the
+**Manage index > Copy Settings** action in the dashboard,
+or the [`copySettings`](/api-reference/api-methods/copySettings) method of the API clients.

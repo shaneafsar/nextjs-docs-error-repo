@@ -1,0 +1,148 @@
+---
+navigation: "default"
+
+title: |-
+  Search Parse.com data
+description: |-
+  Import & sync data between Parse.com & Algolia and build search on top of your Parse.com app.
+slug: guides/sending-and-managing-data/send-and-update-your-data/tutorials/parse-algolia
+---
+
+
+
+
+## Introduction
+
+One key feature of [Parse](http://docs.parseplatform.org/) is for applications to use Parse Core as their data store. In a few simple steps, this tutorial will teach you how to import your existing data, index new data as it is added to Parse, and remove indexed data when it is removed from Parse.
+
+The [Algolia JavaScript API client](/api-client/getting-started/install/javascript/) simplifies the integration of your Parse based applications with Algolia's real-time search service.
+
+## Prerequisites
+
+#### Familiar with Parse
+
+This tutorial assumes you are familiar with Parse, how it works, and how to build Cloud Code applications. If you would like to learn more before continuing with this tutorial, we suggest reading the following documentation and tutorials:
+
+* [Getting started Parse](http://docs.parseplatform.org/)
+
+## Add Algolia Realtime Search to the Project
+
+In order to integrate Algolia within your Parse application, install our JavaScript API client:
+
+```sh
+npm install algoliasearch
+```
+
+## Import Existing Data
+
+In many cases, you may already have data within your Parse application. In order to integrate with Algolia, you will want to index that data. We will use contact information being stored within Parse as our example.
+
+```js
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey');
+const index = client.initIndex('contacts');
+
+const indexData = () => {
+  // Create a new query for Contacts
+  const query = new Parse.Query('Contact');
+  // Find all items
+  query.find({
+    success(contacts) {
+      // Prepare objects to index from contacts
+      const objectsToIndex = contacts.map(contact => {
+        // Convert to JavaScript object and specify Algolia's objectID with the Parse.Object unique ID
+        return { ...contact.toJSON(), ...{ objectID: contact.objectId } };
+      });
+      // Add or update new objects
+      index.saveObjects(objectsToIndex).then(() => {
+        console.log('Parse<>Algolia import done');
+      });
+    },
+    error(err) {
+      throw err;
+    }
+  });
+};
+```
+
+You can now use this function within your own Parse Cloud Code functions in order to index your existing data.
+
+To ensure the reindexing performs well it is suggested you limit the number of items indexed per call between 1,000 and 10,000 depending on the object size.
+
+## Reindex Data
+
+Sometimes, you might have the need to completely reindex your data. This means removing data from the index that may not longer exist, adding new data, and updating existing data. The following code can be used within your own Parse Cloud Code functions to perform a reindexing.
+
+```js
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey');
+const index = client.initIndex('contacts');
+const reindexData = () => {
+  let objectsToIndex = [];
+  // Create a new query for Contacts
+  const query = new Parse.Query('Contact');
+  // Find all items
+  query.find({
+    success(contacts) {
+      // prepare objects to index from contacts
+      objectsToIndex = contacts.map(contact => {
+        // convert to regular key/value JavaScript object
+        contact = contact.toJSON();
+        // Specify Algolia's objectID with the Parse.Object unique ID
+        contact.objectID = contact.objectId;
+        return contact;
+      });
+      index.replaceAllObjects(objectsToIndex, { safe: true }).then(() => {
+        console.log('Parse<>Algolia reimport done');
+      });
+    },
+    error(err) {
+      throw err;
+    }
+  });
+};
+```
+
+To ensure the reindexing performs well it is suggested you limit the number of items indexed per call between 1,000 and 10,000 depending on the object size.
+
+## Add or Update Data
+
+Now, we need to handle the case where data is being added or updated. We can easily setup our code to automatically add or update data to our search index by using the `afterSave` Parse function. This will allow us to define code that will be called after data is stored in Parse.
+
+```js
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey');
+const index = client.initIndex('contacts');
+Parse.Cloud.afterSave('Contact', ({object}) => {
+  // Convert Parse.Object to JSON
+  const objectToSave = object.toJSON();
+  // Specify Algolia's objectID with the Parse.Object unique ID
+  objectToSave.objectID = objectToSave.objectId;
+  // Add or update object
+  index.saveObject(objectToSave).then(() => {
+    console.log('Parse<>Algolia object saved');
+  });
+});
+```
+
+Now, whenever contact data is saved in Parse, it will automatically be indexed with Algolia.
+
+## Delete Data
+
+Next, we need to handle the case where data is deleted from your Parse application. In order to do this, we can use the `afterDelete` Parse function. This will allow us to define code that will be called after data is removed from Parse.
+
+```js
+const algoliasearch = require('algoliasearch');
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey');
+const index = client.initIndex('contacts');
+Parse.Cloud.afterDelete('Contact', ({object}) => {
+  // Get Algolia objectID
+  const objectID = object.id;
+  // Remove the object from Algolia
+  index.deleteObject(objectID).then(() => {
+    console.log('Parse<>Algolia object deleted');
+  });
+});
+```
+
+Now, whenever contact data is removed from Parse, it will automatically get removed from Algolia.

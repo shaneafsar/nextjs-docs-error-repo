@@ -1,0 +1,61 @@
+---
+navigation: "netlify"
+
+title: |-
+  Netlify FAQ
+description: |-
+  FAQ about the Algolia plugin for Netlify.
+slug: tools/crawler/netlify-plugin/netlify-faq
+---
+
+
+This is a general purpose FAQ. If you are looking for more technical answers about the Algolia Crawler, please refer to the [Crawler documentation](/tools/crawler/netlify-plugin/extraction-strategy).
+
+## How to extract more information from pages?
+
+While the Algolia Crawler offers extended record customization, the plugin provides a single, default [extraction strategy](/tools/crawler/netlify-plugin/extraction-strategy).
+
+If you think something is missing, or you'd like to have more control, please share your feedback in the [Algolia Discourse forum](https://discourse.algolia.com/c/netlify/28).
+
+## How to build a custom user interface?
+
+The easiest solution is to use InstantSearch, Algolia's open source, production-ready family of UI libraries that let you build a search interface in your frontend app. InstantSearch is available for [vanilla JS](/guides/building-search-ui/what-is-instantsearch/js/), [React](/guides/building-search-ui/what-is-instantsearch/react/), [Vue](/guides/building-search-ui/what-is-instantsearch/vue/), and [Angular](/guides/building-search-ui/what-is-instantsearch/angular/).
+
+## How to get a notification when the crawl is done?
+
+You can configure notifications in the [account settings](https://crawler.algolia.com/admin/user/settings/) of your Crawler Admin Console.
+
+## There's an issue with the crawl
+
+The **Monitoring** tab in the Crawler UI offers information to help you improve the crawler behavior.
+Keep in mind that, by default, the Algolia Crawler respects most of the standard web rules: `robots.txt`, password protection, canonical URLs, redirects, etc.
+
+You can help the crawler by:
+
+- Allowing the Algolia user agent in [your `robots.txt` file](/tools/crawler/troubleshooting/faq/#what-is-the-user-agent-of-the-crawler).
+- Specifying relative URLs in your links and canonical URLs instead of absolute URLs that could conflict with your domain.
+
+## How to handle custom domains?
+
+The plugin can automatically alias your custom domain:
+
+- The Algolia Crawler automatically aliases custom domains that you configured in Netlify (**Settings > Domain management > Custom domains**).
+- If this is impossible to configure in Netlify, a `customDomain` option is available in your [`netlify.toml` file](https://github.com/algolia/algoliasearch-netlify/blob/master/plugin/README.md#inputs).
+
+## How to crawl a website not at the root level?
+
+The plugin can automatically alias paths (for example, by removing a path prefix) by setting the option `pathPrefix` in your [ `netlify.toml` file](https://github.com/algolia/algoliasearch-netlify/blob/master/plugin/README.md#inputs).
+
+## Is displaying the Algolia logo required?
+
+Yes, if you are on a Free plan.
+Please see [the complete answer for more details](https://support.algolia.com/hc/en-us/articles/4406981826065-Do-I-need-to-display-the-Algolia-logo-when-on-a-free-plan-).
+
+
+
+
+## As an Algolia paying user, can I use my own app?
+
+
+Yes, but it requires manual intervention.
+Contact the  team to implement the change.

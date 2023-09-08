@@ -1,0 +1,142 @@
+---
+navigation: "cli"
+
+title: |-
+  Overview
+description: |-
+  Manage your Algolia resources directly from the command line.
+slug: tools/cli/get-started/overview
+---
+
+
+The Algolia Command-Line Interface (CLI) lets you manage your Algolia resources from the command line.
+It's free and open source.
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>
+
+## Before you begin
+
+Before using the Algolia CLI,
+you need [a (free) Algolia account](https://dashboard.algolia.com/users/sign_up).
+
+## Install the Algolia CLI
+
+You can download binaries for Linux, Windows, and macOS,
+or install the Algolia CLI using a package manager.
+
+{/* Partial: tabs.haml */}
+
+## Add your first profile
+
+To make accessing your Algolia resources easier,
+[create a profile](/tools/cli/get-started/authentication/).
+
+```sh
+algolia profile add
+```
+
+
+
+This command stores your Algolia application ID and the admin API key under a friendly name.
+You can find your application ID and API keys in the [Algolia dashboard](https://dashboard.algolia.com/account/api-keys/all/).
+
+
+
+## Explore
+
+To make exploring the available commands easier,
+[set up command completion](/tools/cli/get-started/completion/) for your shell.
+
+To see all available commands of the Algolia CLI, run:
+
+```sh
+algolia
+```
+
+You should see output similar to:
+
+```
+The official command-line tool to interact with Algolia.
+
+Usage:
+  algolia <command> <subcommand> [flags]
+
+Available commands:
+  apikeys:     Manage your Algolia API keys
+  completion:  Generate the autocompletion script for the specified shell
+  dictionary:  Manage your Algolia dictionaries
+  events:      Manage your Algolia events
+  help:        Help about any command
+  indices:     Manage your Algolia indices
+  objects:     Manage your indices' objects
+  open:        Quickly open Algolia pages
+  profile:     Manage your profiles
+  rules:       Manage your Algolia rules
+  search:      Search the given index
+  settings:    Manage your Algolia settings
+  synonyms:    Manage your Algolia synonyms
+
+Flags:
+      --admin-api-key string    The admin API key
+      --application-id string   The application ID
+  -h, --help                    help for algolia
+  -p, --profile string          The profile to use
+  -v, --version                 Get the version of the Algolia CLI
+
+Examples
+  $ algolia search MY_INDEX --query "foo"
+  $ algolia objects browse MY_INDEX
+  $ algolia apikeys create --acl search
+  $ algolia rules import MY_INDEX -f rules.json
+
+Learn More
+  Use 'algolia <command> <subcommand> --help' for more information about a command.
+  Read the documentation at https://algolia.com/tools/cli/
+```
+
+To learn more about a command, enter `algolia <command>`—for example, `algolia profile`.
+To see available options for a sub-command, add `--help`.
+
+For example, to see the available options of the `algolia profile add` command, run:
+
+```sh
+algolia profile add --help
+```
+
+You should see output similar to:
+
+```
+Add a new profile configuration to the CLI
+
+Usage
+  algolia profile add [flags]
+
+Flags
+      --app-id string   ID of the application.
+  -d, --default         Set the profile as the default one.
+  -h, --help            help for add
+  -n, --name string     Name of the profile.
+
+Inherited Flags
+      --admin-api-key string    The admin API key
+      --application-id string   The application ID
+  -p, --profile string          The profile to use
+
+Examples
+  # Add a new profile (interactive)
+  $ algolia profile add
+
+  # Add a new profile (non-interactive) and set it to default
+  $ algolia profile add --name "my-profile" --app-id "my-app-id" --admin-api-key "my-admin-api-key" --default
+
+Learn More
+  Use 'algolia <command> <subcommand> --help' for more information about a command.
+  Read the documentation at https://algolia.com/tools/cli/
+```
+
+## Share feedback
+
+To report bugs, make a feature request, or share feedback,
+open an issue in the [Algolia CLI repository](https://github.com/algolia/cli/issues).

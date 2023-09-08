@@ -1,0 +1,61 @@
+---
+navigation: "crawler"
+
+title: |-
+  Crawler overview
+description: |-
+  Provides a basic overview of the Algolia Crawler.
+slug: tools/crawler/getting-started/overview
+---
+
+
+If your data is hosted on a variety of sites and in a variety of formats, it can be daunting to centralize your data or upload your records to Algolia. **The Algolia Crawler simplifies this process.**
+
+<Media type="video-youtube" id="w84K1cbUbmY" alt="Overview of the Algolia Crawler" />
+
+<Callout type="info">
+  [Algolia Crawler](https://www.algolia.com/products/crawler/) is available as an [add-on](https://www.algolia.com/pricing/).
+</Callout>
+
+
+
+## What is the Crawler?
+
+
+
+The Crawler is an automated web scraping program. When given a set of start URLs, it visits and extracts content from those pages. It then visits URLs these pages link to, and the process repeats itself for all linked pages. With little configuration the Crawler can populate and maintain Algolia indices for you by periodically extracting content from your web pages.
+
+## What can the Crawler do for you?
+
+The Crawler can help you extract content from multiple sites, format that content, and upload it to Algolia. The Crawler:
+- Quickly aggregates your distributed content.
+- Automatically and periodically updates your aggregated content.
+- Enables you to quickly and accurately search through your records (and provide this same search experience to your clients).
+
+## When should you use the Crawler?
+
+You should consider using the Crawler if you have a large amount of data that's:
+
+- Inaccessible from its original source
+- Stored in different formats
+- Hosted on various websites
+- Maintained by different people
+- Displayed in a single web page, but aggregated from different sources.
+
+For the Crawler to work effectively, most of the information you want to index should appear on websites. However, the Crawler can work even if the representation of your web-content is inconsistent, or if your web pages require login credentials.
+
+## How to use the Crawler
+
+
+
+You can use your crawlers with two tools: the admin console, and the Crawler REST API.
+
+### The admin console
+
+You can create, configure, and launch crawlers from the [Crawler admin console](/tools/crawler/getting-started/crawler-configuration/in-depth/crawler-admin/). You can also test your crawler on specific URLs and analyze the results. The admin console is the best way to get familiar with and to start using the Crawler.
+
+
+
+### Crawler REST API
+
+While there are [use cases for the Crawler REST API](/tools/crawler/apis/crawler-rest-api), **Algolia recommends using the Admin Console**. Usage of the REST API isn't covered by any service-level agreement (SLA).

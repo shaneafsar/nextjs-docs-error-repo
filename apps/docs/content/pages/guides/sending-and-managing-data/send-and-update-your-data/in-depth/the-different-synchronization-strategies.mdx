@@ -1,0 +1,74 @@
+---
+navigation: "default"
+
+title: |-
+  Different synchronization strategies
+description: |-
+  Learn about the different ways to reindex your data into Algolia whenever your content changes.
+slug: guides/sending-and-managing-data/send-and-update-your-data/in-depth/the-different-synchronization-strategies
+---
+
+
+Once you've first indexed your data, **you need to keep your index up to date as the data changes**. Most of the time, you need to reindex in the following scenarios:
+
+- You've changed your index's structure.
+- Your source has changed since the last update.
+- You need to resolve "data drift" which happens when you have different sources of data, making it difficult to track changes.
+
+There are several ways to update your index:
+
+1. **Full reindexing**: replace your entire index with a new set of records.
+2. **Full record updates**: replace an entire record with a new one.
+3. **Partial record updates**: update only a subset of attributes within a record.
+
+The appropriate method depends on your use case.
+
+## Differences between each method
+
+Algolia offers three methods to change the content of your index. It's important to understand their differences so you can better manage your updates.
+
+### Full reindexing
+
+When performing a full reindex, **you're removing all existing records and replacing them with a fresh set.** This is ideal when your data changes a lot or when there's no way for you to track it.
+
+For example, if you have a content site that constantly changes, such as technical documentation, you should [split long pages into multiple records](/guides/sending-and-managing-data/prepare-your-data/how-to/indexing-long-documents/) for relevance reasons. This makes tracking changes difficult, because adding a single sentence in the middle of a page can shift the entire record structure. Also, depending on the structure of the site and how you update it, it might be impossible to know what exact pages were impacted. **It's a typical scenario where full reindexing is necessary.**
+
+To fully reindex your data, you need to use the [`replaceAllObjects`](/api-reference/api-methods/replaceAllObjects) method. This ensures there's no downtime during the reindex, and your search is always available.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>
+
+<Callout type="warning">
+  A full reindex [can significantly increase your indexing operations count](https://support.algolia.com/hc/en-us/articles/4406981829777-How-does-Algolia-count-records-and-operations-). It's also slower than incremental updates, because you're reindexing every single record. This is a powerful way of keeping your data up to date, but **be mindful of the impact on your operations count and indexing pipeline.**
+</Callout>
+
+### Full record updates
+
+If you can track changes to your data and are able to identify affected records, then you can update records individually.
+
+For example, imagine you're running a forum with a search to look for members. Your records have a one to one relationship with member entities in your data. In this scenario, you can update each record whenever the entity changes. Whenever you add, update, or delete a member, you could also perform an incremental update to your Algolia index.
+
+To update a record, you need to use the [`saveObjects`](/api-reference/api-methods/saveObjects) method and specify the `objectID` of the record to update.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>
+
+### Partial record updates
+
+Full record updates work when you're able to specify the full data to put in the record. Yet, there are cases when you only know the part of the data to update, and not the rest of the data. In those situations, you can perform partial record updates with only the data to change.
+
+Imagine you have an online store with independent systems handling different aspects of your data, one for content management and a third-party service for customer reviews. Whenever a product's description changes, your CMS doesn't know how many reviews the product has. Conversely, whenever a customer posts a review, the API of your third-party service can only provide you with this data. In this case, you would probably want to centralize update events and perform partial record updates based on the data you receive.
+
+To update individual attributes in a record, you need to use the [`partialUpdateObjects`](/api-reference/api-methods/partialUpdateObjects) method.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>

@@ -1,0 +1,7 @@
+pre.sp-pre-placeholder {
+  display: none;
+}
+
+.sandpack-editor .cm-gutter.cm-lineNumbers {
+  font-size: 1em;
+}

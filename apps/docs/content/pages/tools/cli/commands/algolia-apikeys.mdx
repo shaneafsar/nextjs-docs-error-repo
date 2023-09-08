@@ -1,0 +1,88 @@
+---
+navigation: "cli"
+title: |-
+  algolia apikeys
+description: |-
+  Manage your Algolia API keys
+slug: tools/cli/commands/algolia-apikeys
+---
+
+## algolia apikeys create
+
+Create a new API key
+
+### Usage
+
+`algolia apikeys create [flags]`
+
+### Examples
+
+Create a new API key targeting the index "MOVIES", with the "search" and "browse" ACL and a description
+
+```sh
+algolia apikeys create --indices MOVIES --acl search,browse --description "Search & Browse API Key"
+```
+
+Create a new API key targeting the indices "MOVIES" and "ARTICLES", with the "http://movies.com" referer, with a validity of 1 hour and a description
+
+```sh
+algolia apikeys create -i MOVIES,ARTICLES --acl search -r "http://movies.com" --u 1h -d "Search-only API Key for foo & bar"
+```
+
+### Flags
+
+- `--acl`: ACL of the API Key.  
+    
+  `search`: allowed to perform search operations.  
+  `browse`: allowed to retrieve all index data with the browse endpoint.  
+  `addObject`: allowed to add or update a records in the index.  
+  `deleteObject`: allowed to delete an existing record.  
+  `listIndexes`: allowed to get a list of all existing indices.  
+  `deleteIndex`: allowed to delete an index.  
+  `settings`: allowed to read all index settings.  
+  `editSettings`: allowed to update all index settings.  
+  `analytics`: allowed to retrieve data with the Analytics API.  
+  `recommendation`: allowed to interact with the Recommendation API.  
+  `usage`: allowed to retrieve data with the Usage API.  
+  `logs`: allowed to query the logs.  
+  `seeUnretrievableAttributes`: allowed to retrieve unretrievableAttributes for all operations that return records.  
+  
+- `-d`, `--description`: Specify a description of the API key.  
+  Used for informative purposes only. It has no impact on the functionality of the API key.
+- `-i`, `--indices`: Specify the list of targeted indices.  
+  You can target all indices starting with a prefix or ending with a suffix using the `*` character.  
+  For example, `dev_*` matches all indices starting with `dev_` and `*_dev` matches all indices ending with `_dev`.  
+  
+- `-r`, `--referers`: Specify the list of referrers that can perform an operation.  
+  You can use the `*` (asterisk) character as a wildcard to match subdomains, or all pages of a website.  
+  
+- `-u`, `--validity`: How long this API key is valid, in seconds.  
+  A value of 0 means the API key doesn’t expire.
+## algolia apikeys delete
+
+Delete API key
+
+### Usage
+
+`algolia apikeys delete <api-key> [flags]`
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+## algolia apikeys list
+
+List API keys
+
+### Usage
+
+`algolia apikeys list [flags]`
+
+### Output formatting flags
+
+- `--allow-missing-template-keys`: If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.
+
+- `-o`, `--output`: Output format. One of: (json, jsonpath, jsonpath-as-json, jsonpath-file).
+
+- `--template`: Template string or path to template file to use when --output=jsonpath, --output=jsonpath-file.
+

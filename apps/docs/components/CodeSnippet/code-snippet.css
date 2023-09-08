@@ -1,0 +1,180 @@
+/* Code Snippet */
+.dark .code-snippet {
+  --theme-accent: #ff5e00;
+  --theme-code-text: #cacaca;
+  --theme-code-selection-bg: var(--color-xenon-700);
+  --theme-code-mark-bg: #2a3e7e;
+  --theme-code-mark-border: #4f6ec4;
+  --theme-code-ins-bg: #2e482f;
+  --theme-code-ins-border: #388a43;
+  --theme-code-ins-text: #8ac191;
+  --theme-code-del-bg: #5d283b;
+  --theme-code-del-border: #be5078;
+  --theme-code-del-text: #ce97ab;
+}
+.code-snippet {
+  --theme-accent: #ff5e00;
+  --theme-code-text: #cacaca;
+  --theme-code-selection-bg: var(--color-xenon-700);
+  --theme-code-mark-bg: #2a3e7e;
+  --theme-code-mark-border: #4f6ec4;
+  --theme-code-ins-bg: rgba(177, 222, 177, 0.3);
+  --theme-code-ins-border: rgba(177, 222, 177, 1);
+  --theme-code-ins-text: #8ac191;
+  --theme-code-del-bg: rgba(212, 152, 174, 0.3);
+  --theme-code-del-border: rgba(212, 152, 174, 1);
+  --theme-code-del-text: #ce97ab;
+}
+.code-snippet pre {
+  line-height: 1.65;
+}
+.code-snippet .title {
+  font-weight: bold;
+  padding: 0 14px 7px 14px;
+  border-bottom: 2px solid theme("colors.xenon-400");
+}
+.code-snippet pre {
+  overflow-x: auto;
+  margin: 0;
+  padding: 0 0 12px 0;
+  font-size: 0.9rem;
+}
+.code-snippet pre:focus-visible {
+  outline: 3px solid var(--theme-accent);
+  outline-offset: -3px;
+}
+.code-snippet pre > code {
+  all: unset;
+  display: inline-block;
+  min-width: 100%;
+  --padding-inline: 1.25rem;
+  counter-reset: line;
+}
+.code-snippet pre > code .line {
+  display: block;
+  line-height: 1.5rem;
+  position: relative;
+}
+.code-snippet pre > code .line::before {
+  color: var(--theme-code-text);
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  margin-right: 1em;
+  width: 24px;
+}
+
+.code-snippet pre > code .no-line-number.line {
+  --padding-inline: 1.5rem;
+}
+.code-snippet pre > code .no-line-number.line::before {
+  display: none;
+}
+.code-snippet pre > code .line.ins::before,
+.code-snippet pre > code .line.del::before,
+.code-snippet pre > code .line.mark::before {
+  color: initial;
+  filter: initial;
+  counter-increment: initial;
+  content: initial;
+  display: initial;
+  margin-right: initial;
+  left: 2px;
+}
+.code-snippet pre > code .line.ins > :first-child::before,
+.code-snippet pre > code .line.del > :first-child::before,
+.code-snippet pre > code .line.mark > :first-child::before {
+  color: var(--theme-code-text);
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  margin-right: 1em;
+  margin-left: -2px;
+  width: 24px;
+}
+.code-snippet pre > code > .line {
+  display: inline-block;
+  min-width: 100%;
+  padding-inline-start: var(--padding-inline);
+  padding-inline-end: calc(2 * var(--padding-inline));
+}
+.code-snippet pre > code > .line span {
+  position: relative;
+}
+.code-snippet pre > code > .line span.empty::before {
+  content: " ";
+}
+.code-snippet pre > code > .line.mark,
+.code-snippet pre > code > .line.ins,
+.code-snippet pre > code > .line.del {
+  --accent-margin: 0rem;
+  --accent-width: 0.15rem;
+  background: var(--line-marker-bg-color);
+  margin-inline-start: var(--accent-margin);
+  border-inline-start: var(--accent-width) solid var(--line-marker-border-color);
+}
+.code-snippet pre > code > .line.mark::before,
+.code-snippet pre > code > .line.ins::before,
+.code-snippet pre > code > .line.del::before {
+  position: absolute;
+  left: 0.5rem;
+}
+.code-snippet pre > code > .line.mark {
+  --line-marker-bg-color: var(--theme-code-mark-bg);
+  --line-marker-border-color: var(--theme-code-mark-border);
+}
+.code-snippet pre > code > .line.ins {
+  --line-marker-bg-color: var(--theme-code-ins-bg);
+  --line-marker-border-color: var(--theme-code-ins-border);
+}
+.code-snippet pre > code > .line.ins::before {
+  content: "+";
+  color: var(--theme-code-ins-text);
+}
+.code-snippet pre > code > .line.del {
+  --line-marker-bg-color: var(--theme-code-del-bg);
+  --line-marker-border-color: var(--theme-code-del-border);
+}
+.code-snippet pre > code > .line.del::before {
+  content: "-";
+  color: var(--theme-code-del-text);
+}
+.code-snippet pre > code > .line mark,
+.code-snippet pre > code > .line ins,
+.code-snippet pre > code > .line del {
+  all: unset;
+  background: var(--inline-marker-bg-color);
+  box-shadow: 0 0 0 0.05rem var(--inline-marker-bg-color),
+    0 0 0 0.1rem var(--inline-marker-border-color);
+  border-radius: 0.05rem;
+  padding-inline: 0.05rem;
+  margin-inline: 0.1rem;
+}
+.code-snippet pre > code > .line mark {
+  --inline-marker-bg-color: var(--theme-code-mark-bg);
+  --inline-marker-border-color: var(--theme-code-mark-border);
+}
+.code-snippet pre > code > .line ins {
+  --inline-marker-bg-color: var(--theme-code-ins-bg);
+  --inline-marker-border-color: var(--theme-code-ins-border);
+}
+.code-snippet pre > code > .line del {
+  --inline-marker-bg-color: var(--theme-code-del-bg);
+  --inline-marker-border-color: var(--theme-code-del-border);
+}
+.code-snippet ::selection {
+  color: white;
+  background-color: theme("colors.xenon-700");
+}
+
+html[data-theme="light"] {
+  --shiki-foreground-primary: #5a5e9a;
+}
+
+html[data-theme="dark"] {
+  --shiki-foreground-primary: #c7c5d3;
+}
+
+.dark .code-snippet pre > code .line::before {
+  opacity: 0.4;
+}

@@ -1,0 +1,8 @@
+
+## Building a custom connector
+
+When creating a custom widget, start by **writing a connector that encapsulates all the logic of your widget**, yet keeps the rendering separate.
+
+**This guide uses the example of a negative refinement list widget.** It's similar to a [`refinement-list`](/ui-libraries/instantsearch/refinements/refinement-list/js), but instead of filtering on the selected items, it excludes them from the search. For example, selecting the brand "Apple" would filter results to all matching records that _aren't_ Apple products.
+
+<Media type="image" id="build-search-ui/negative-refinement-list.png" alt="Negative refinement list custom widget"/>

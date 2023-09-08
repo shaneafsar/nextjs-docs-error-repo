@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: local("JetBrains Mono"),
+    url(fonts/JetBrainsMono-Regular.woff2) format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: local("JetBrains Mono"),
+    url(fonts/JetBrainsMono-Bold.woff2) format("woff2");
+  font-weight: bold;
+  font-style: italic;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --docsearch-key-gradient: linear-gradient(-225deg, #d5dbe4, #f8f8f8);
+}
+
+html{
+  scroll-behavior: smooth;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0px);
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0px);
+}
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-enter-active,
+.fade-exit-active {
+  transition: all 300ms;
+}
+
+.header-cta-primary {
+  box-shadow: rgba(45, 35, 66, 0.3) 0px 2px 8px,
+    rgb(2, 46, 185) 0px -3px 0px 0px inset;
+  border-radius: 16px 50px 50px 16px;
+  transition: box-shadow 0.15s ease 0s, transform 0.15s ease 0s;
+  will-change: box-shadow, transform;
+}
+
+.header-cta-primary:hover {
+  box-shadow: rgba(45, 35, 66, 0.4) 0px 4px 8px,
+    rgba(45, 35, 66, 0.3) 0px 7px 13px -3px, rgb(2, 46, 185) 0px -3px 0px inset;
+  transform: translateY(-2px);
+}
+
+.header-cta-secondary {
+  border-radius: 50px 16px 16px 50px;
+  box-shadow: theme("backgroundColor.xenon-200") 0px 0px 0px 2px inset;
+}
+
+.header-cta-secondary:hover {
+  box-shadow: theme("backgroundColor.xenon-700") 0px 0px 0px 2px inset;
+}
+
+.dark .header-cta-secondary {
+  box-shadow: theme("backgroundColor.xenon-100") 0px 0px 0px 2px inset;
+}
+
+.page{
+  @apply scroll-mt-48 lg:grid lg:grid-cols-12;
+}

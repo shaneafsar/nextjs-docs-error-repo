@@ -1,0 +1,104 @@
+---
+navigation: "default"
+
+title: |-
+  What is in a record
+description: |-
+  Learn everything you need to know about Algolia records, including attributes, types, limits, formatting, nesting, and more.
+slug: guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record
+---
+
+
+Algolia uses [JSON](https://en.wikipedia.org/wiki/JSON) to model records.
+
+Here's an example of a typical record:
+
+```json
+[
+  {
+    "objectID": 42,
+    "title": "Breaking Bad",
+    "episodes": [
+      "Crazy Handful of Nothin'",
+      "Gray Matter"
+    ],
+    "like_count": 978,
+    "avg_rating": 1.23456,
+    "air_date": 1356846157,
+    "featured": true,
+    "lead_role": {
+      "name": "Walter White",
+      "portrayed_by": "Bryan Cranston"
+    },
+    "_tags": ["tv series", "drugs"]
+  }
+]
+```
+
+Your records can have attributes with the following formats:
+
+- string: `"title": "Breaking Bad"`
+- integer: `"like_count": 978`
+- float: `"avg_rating": 1.23456`
+- boolean: `"featured": true`
+- objects: `"lead_role": { "name": "Walter White", "portrayed_by": "Bryan Cranston" }`
+- arrays: `"episodes": ["Crazy Handful of Nothin'", "Gray Matter"]`
+
+<Callout type="info">
+  Integers and booleans are treated as strings by [searchable attributes](/guides/sending-and-managing-data/prepare-your-data/how-to/setting-searchable-attributes/) but treated as numerical values by [numerical facets](/api-reference/api-parameters/numericFilters/).
+</Callout>
+
+## Unique record identifier
+
+The engine identifies each object with a unique `objectID` attribute.
+
+**You should set `objectID`s yourself**, based on _your_ data. Since you use `objectID`s to update and delete specific records, it's easier if you've defined them yourself. If you don't set `objectID`s, Algolia generates them for you: you can check their values by browsing the index. 
+
+When you retrieve objects, `objectID`s are in string format, even if you set them as integers. If you want to use integers in your application, convert `objectID` into integers after retrieving the objects but make sure that _all_ your `objectID`s contain integer values.
+
+Since `objectID` uniquely identifies your objects:
+
+- **You can search for it** by declaring it as a [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes).
+- **You can't highlight or snippet it.** If you declare `objectID` in [`attributesToHighlight`](/api-reference/api-parameters/attributesToHighlight) or [`attributesToSnippet`](/api-reference/api-parameters/attributesToSnippet), the engine ignores it.
+- **You can't exclude it from results.** If you declare `objectID` in [`unretrievableAttributes`](/api-reference/api-parameters/unretrievableAttributes) or omit it from [`attributesToRetrieve`](/api-reference/api-parameters/attributesToRetrieve), the engine still returns it. For this reason, `objectID`s mustn't contain any sensitive data.
+- **You can use it as a facet filter, but you can't facet it**. If you declare `objectID` in [`attributesForFaceting`](/api-reference/api-parameters/attributesForFaceting), the engine ignores it. [Faceting on a unique identifier](/guides/managing-results/refine-results/faceting/#faceting-on-objectid) makes little sense since every facet count would equal one.
+
+### Acceptable characters for `objectID`s
+
+`objectID` strings can:
+
+- Contain any character
+- Be of any length as long as it fits [the size limit for your plan](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/).
+
+## Dates
+
+If you want to filter or sort by date, you must format date attributes as [Unix timestamps](https://www.unixtimestamp.com/) (for example, `1435735848`). Since Algolia's engine doesn't interpret dates as ISO 8601 strings, you must convert them into numeric timestamp values, using the appropriate functions for your chosen programming language:
+
+- Android - [`Date()`](https://developer.android.com/reference/java/util/Date#Date())
+- Go - [`time.Unix`](https://pkg.go.dev/time#Unix)
+- Java/Scala (java.time package) - [`getTime()`](https://docs.oracle.com/javase/7/docs/api/java/util/Date.html#getTime%28%29)
+- JavaScript - [`getTime()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime)
+- Kotlin - [`kotlinx-datetime`](https://github.com/Kotlin/kotlinx-datetime#converting-instant-to-and-from-unix-time)
+- .Net - [`ToUnixTimeSeconds`](https://docs.microsoft.com/en-us/dotnet/api/system.datetimeoffset.tounixtimeseconds)
+- PHP - [`strtotime`](https://www.php.net/manual/en/function.strtotime.php) 
+- Python - [`datetime`](https://docs.python.org/3/library/datetime.html?highlight=datetime#datetime-objects)
+- Ruby - [`date.to_time`](https://ruby-doc.org/stdlib-3.1.0/libdoc/date/rdoc/Date.html#method-i-to_time)
+- Swift - [`NSDate(withTimeIntervalSince1970:)`](https://developer.apple.com/documentation/foundation/nsdate/1591576-datewithtimeintervalsince1970/)
+
+<Callout type="info">
+  Depending on the function, the output may need further manipulation to produce an integer value in seconds.
+</Callout>
+
+## Reserved attribute names
+
+Algolia's API uses underscore prefixes to identify reserved attribute names, both in records and the search response.
+
+### In your records
+
+In a record, you can use attribute names like `_tags` or `_geoloc`, but they have an [imposed schema](/guides/managing-results/refine-results/filtering/how-to/filter-by-tags/#dataset-example). All other attribute names are schema-agnostic.
+
+Reserved words aren't searchable by default. If you want to search `_tags` or `_geoloc`, you must add them to your [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes).
+
+### In the search response
+
+In the search response, Algolia returns attributes such as `_highlightResult`, `_snippetResult`, `_rankingInfo`, or `_distinctSeqID`. They're reserved Algolia attributes tied to specific features. Make sure not to use any of those in your records to avoid conflicts.

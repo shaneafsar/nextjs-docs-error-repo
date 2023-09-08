@@ -1,0 +1,307 @@
+---
+navigation: "default"
+
+title: |-
+  Setting searchable attributes
+description: |-
+  How to select only those attributes necessary for search, and to deselect all other attributes.
+slug: guides/sending-and-managing-data/prepare-your-data/how-to/setting-searchable-attributes
+---
+
+
+When you create an index, **all attributes from all your records are searchable by default**. Having all attributes searchable by default lets you perform searches right from the start without having to configure anything. Yet, if you want to make your search more relevant and remove the noise, **you just want to set meaningful attributes as searchable**. For example, if you're building a cooking recipe website, you might include data such as image URLs which aren't relevant for textual search.
+
+You can do this by using the [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes) setting, by specifying what attributes should be searchable. You can go a step further and rank your searchable attributes, making some more relevant than others.
+
+## Dataset
+
+Consider a website to find recipes with the following example dataset:
+
+```json
+[
+  {
+    "title": "Gluten free sponge cake",
+    "ingredients": [
+      "gluten free self raising flour",
+      "caster sugar",
+      "eggs"
+    ],
+    "images": [
+      "https://yourdomain.com/bread-and-cakes/glutenfreesponge1.jpg",
+      "https://yourdomain.com/bread-and-cakes/glutenfreesponge2.jpg"
+    ],
+    "comments": [
+      "This is incredible! I added raisins, and it was even better."
+    ]
+  },
+  {
+    "title": "Gluten-free oatmeal cinnamon raisin bread",
+    "ingredients": [
+      "brown rice flour",
+      "potato starch",
+      "raisins"
+    ],
+    "images": [
+      "https://yourdomain.com/bread-and-cakes/glutenfreeoatmealraisins1.jpg",
+      "https://yourdomain.com/bread-and-cakes/glutenfreeoatmealraisins2.jpg"
+    ],
+    "comments": [
+      "Amazing, this almost tastes like cake."
+    ]
+  }
+]
+```
+
+If you index this dataset without adding any setting, **all attributes are searchable**. Here, this means that when users search, the engine also searches into attributes like `images`, which you just need for display purposes.
+
+For that reason, you want to explicitly set searchable attributes on what users would realistically search for. Here, it makes sense to make `title`, `ingredients` and `comments` searchable, and leave `images` out. Note that you can still display or filter attributes without making them searchable.
+
+## Set searchable attributes in the Algolia dashboard
+
+<Echo name="common/dashboard"/>
+
+1. On the **Configuration** tab, select **Searchable attributes**.
+1. Click **Add a Searchable Attribute** and type or select an attribute from the list.
+1. You can change the level of importance of attributes by dragging them up or down in the **Searchable attributes** list.
+   To make two attributes equally important, when you add a new attribute,
+   type the attributes directly as a comma-separated list—for example, `title, comments`.
+1. Save your changes.
+
+## Set searchable attributes with the API
+
+To make some attributes searchable, you need to include them in the [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes) setting,
+when you configure your index with the [`setSettings`](/api-reference/api-methods/setSettings) method.
+
+Matches within attributes that are higher in this list rank first.
+If you want two attributes to have the same priority, include them on the same level, separated by a comma.
+
+
+
+
+<CodeSnippetGroup>
+
+
+    ```scala
+// `title` and `comments` have the same priority
+client.execute {
+  changeSettings of "myIndex" `with` IndexSettings(
+    searchableAttributes = Some(Seq(
+      SearchableAttributes.attributes("title", "comments")
+      SearchableAttributes.attribute("ingredients")
+    ))
+  )
+}
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+client.execute {
+  changeSettings of "myIndex" `with` IndexSettings(
+    searchableAttributes = Some(Seq(
+      SearchableAttributes.attributes("title")
+      SearchableAttributes.attribute("ingredients")
+      SearchableAttributes.unordered("comments")
+    ))
+  )
+}
+```
+
+
+    ```go
+// `title` and `comments` have the same priority
+res, err := index.SetSettings(search.Settings{
+	SearchableAttributes: opt.SearchableAttributes(
+		"title,comments",
+		"ingredients",
+	),
+})
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+res, err := index.SetSettings(search.Settings{
+	SearchableAttributes: opt.SearchableAttributes(
+		"title",
+		"ingredients",
+		"comments",
+	),
+})
+```
+
+
+    ```java
+// `title` and `comments` have the same priority
+index.setSettings(
+  new IndexSettings().setSearchableAttributes(Arrays.asList(
+    "title,comments",
+    "ingredients"
+  ))
+);
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+index.setSettings(
+  new IndexSettings().setSearchableAttributes(Arrays.asList(
+    "title",
+    "ingredients"
+    "comments",
+  ))
+);
+```
+
+
+    ```csharp
+// `title` and `comments` have the same priority
+IndexSettings settings = new IndexSettings
+{
+    SearchableAttributes = new List<string>
+    {
+      "title,comments",
+      "ingredients"
+    }
+};
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+IndexSettings settings = new IndexSettings
+{
+    SearchableAttributes = new List<string>
+    {
+      "title",
+      "ingredients"
+      "comments",
+    }
+};
+
+index.SetSettings(settings);
+
+// Asynchronous
+await index.SetSettingsAsync(settings);
+```
+
+
+    ```kotlin
+// "title" and "comments" have the same priority
+var settings = settings {
+    searchableAttributes {
+        +"title,comments"
+        +"ingredients"
+    }
+}
+
+// "title" has the highest priority, then "ingredients", then "comments"
+settings = settings {
+    searchableAttributes {
+        +"title"
+        +"ingredients"
+        +"comments"
+    }
+}
+
+index.setSettings(settings)
+```
+
+
+    ```swift
+// `title` and `comments` have the same priority
+index.setSettings([
+  "searchableAttributes": [
+    "title,comments",
+    "ingredients"
+  ]
+])
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+index.setSettings([
+  "searchableAttributes": [
+    "title",
+    "ingredients",
+    "comments"
+  ]
+])
+```
+
+
+    ```python
+# `title` and `comments` have the same priority
+index.set_settings({
+    'searchableAttributes': [
+        'title,comments',
+        'ingredients'
+    ]
+})
+
+# `title` has the highest priority, then `ingredients`, then `comments`
+index.set_settings({
+    'searchableAttributes': [
+        'title',
+        'ingredients',
+        'comments'
+    ]
+})
+```
+
+
+    ```js
+// `title` and `comments` have the same priority
+index.setSettings({
+  searchableAttributes: [
+    'title,comments',
+    'ingredients'
+  ]
+}).then(() => {
+  // done
+});
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+index.setSettings({
+  searchableAttributes: [
+    'title',
+    'ingredients',
+    'comments'
+  ]
+}).then(() => {
+  // done
+});
+```
+
+
+    ```php
+// `title` and `comments` have the same priority
+$index->setSettings([
+  'searchableAttributes' => [
+    "title,comments",
+    "ingredients"
+  ]
+]);
+
+// `title` has the highest priority, then `ingredients`, then `comments`
+$index->setSettings([
+  'searchableAttributes' => [
+    "title",
+    "ingredients",
+    "comments"
+  ]
+]);
+```
+
+
+    ```ruby
+# `title` and `comments` have the same priority
+index.set_settings({
+  searchableAttributes: [
+    'title,comments',
+    'ingredients'
+  ]
+})
+
+# `title` has the highest priority, then `ingredients`, then `comments`
+index.set_settings({
+  searchableAttributes: [
+    'title',
+    'ingredients',
+    'comments'
+  ]
+})
+```
+
+</CodeSnippetGroup>
+
+
+
+In the first example, `title` and `comments` have the same priority.
+In the second example, matches in the `title` attribute rank before matches in the `comments` attribute.

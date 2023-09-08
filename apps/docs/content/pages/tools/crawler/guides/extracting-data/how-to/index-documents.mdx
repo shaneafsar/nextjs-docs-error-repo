@@ -1,0 +1,326 @@
+---
+navigation: "crawler"
+
+title: |-
+  Indexing non-HTML documents
+description: |-
+  Learn how to index documents like PDFs or DOCs with your Algolia crawler.
+slug: tools/crawler/guides/extracting-data/how-to/index-documents
+---
+
+
+You can use Crawler to index documents such as `.pdf`'s and `.doc`'s. Documents are transformed into HTML by a dedicated Tika Server.
+
+## Tika
+
+Most documents have complex formats and are not structured as HTML pages.
+
+To allow the crawler to index documents that are formatted differently, we rely on a [Tika Server](https://tika.apache.org/) that is maintained by Apache.
+The server extracts a document's content and transforms it into a basic HTML file.
+
+## Limitations
+
+Because it's very difficult to translate non-HTML documents into HTML, there are limitations to what can be done:
+- A PDF can easily break if it is exported with an unknown font.
+- The produced HTML has little semantic value, which will make good relevancy hard to achieve.
+- Document indexing is slower than classic HTML indexing.
+- Language detection/information is currently not available.
+
+## Supported filetypes
+
+### PDF
+
+- Associated extension: `.pdf`
+- `fileTypesToMatch`: `pdf`
+
+<Media type="image" id="tools/crawler/pdf_test.png" alt="" />
+
+For example, given the `.pdf` file in the image above, the Tika server will expose the following HTML which your crawler then passes to your `recordExtractor`.
+
+<Callout type="warning">
+  The metadata presented here is not guaranteed to appear on every document.
+</Callout>
+
+```html
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="date" content="2018-07-17T13:35:40Z"/>
+  <meta name="pdf:PDFVersion" content="1.3"/>
+  <meta name="pdf:docinfo:title" content="test-docx-file.pages"/>
+  <meta name="xmp:CreatorTool" content="Pages"/>
+  <meta name="access_permission:modify_annotations" content="true"/>
+  <meta name="access_permission:can_print_degraded" content="true"/>
+  <meta name="dcterms:created" content="2018-07-17T13:35:40Z"/>
+  <meta name="Last-Modified" content="2018-07-17T13:35:40Z"/>
+  <meta name="dcterms:modified" content="2018-07-17T13:35:40Z"/>
+  <meta name="dc:format" content="application/pdf; version=1.3"/>
+  <meta name="Last-Save-Date" content="2018-07-17T13:35:40Z"/>
+  <meta name="pdf:docinfo:creator_tool" content="Pages"/>
+  <meta name="access_permission:fill_in_form" content="true"/>
+  <meta name="pdf:docinfo:modified" content="2018-07-17T13:35:40Z"/>
+  <meta name="meta:save-date" content="2018-07-17T13:35:40Z"/>
+  <meta name="pdf:encrypted" content="false"/>
+  <meta name="dc:title" content="test-docx-file.pages"/>
+  <meta name="modified" content="2018-07-17T13:35:40Z"/>
+  <meta name="Content-Type" content="application/pdf"/>
+  <meta name="X-Parsed-By" content="org.apache.tika.parser.DefaultParser"/>
+  <meta name="X-Parsed-By" content="org.apache.tika.parser.pdf.PDFParser"/>
+  <meta name="meta:creation-date" content="2018-07-17T13:35:40Z"/>
+  <meta name="created" content="Tue Jul 17 13:35:40 UTC 2018"/>
+  <meta name="access_permission:extract_for_accessibility" content="true"/>
+  <meta name="access_permission:assemble_document" content="true"/>
+  <meta name="xmpTPg:NPages" content="1"/>
+  <meta name="Creation-Date" content="2018-07-17T13:35:40Z"/>
+  <meta name="access_permission:extract_content" content="true"/>
+  <meta name="access_permission:can_print" content="true"/>
+  <meta name="producer" content="Mac OS X 10.13.5 Quartz PDFContext"/>
+  <meta name="access_permission:can_modify" content="true"/>
+  <meta name="pdf:docinfo:producer" content="Mac OS X 10.13.5 Quartz PDFContext"/>
+  <meta name="pdf:docinfo:created" content="2018-07-17T13:35:40Z"/>
+  <title>test-docx-file.pages</title>
+</head>
+<body>
+  <div class="page">
+    <p/>
+    <p>Test PDF file content</p>
+    <p/>
+  </div>
+</body>
+</html>
+```
+
+
+### Word document
+
+- Associated extensions: `.doc`, `.docx`
+- `fileTypesToMatch`: `doc`
+
+<Media type="image" id="tools/crawler/doc_test.png" alt="" />
+
+For example, given the `.doc` file in the image above, the Tika server will expose the following HTML, which your crawler then passes to its `recordExtractor`.
+
+<Callout type="warning">
+  The metadata presented here is not guaranteed to appear on every document.
+</Callout>
+
+```html
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="X-Parsed-By" content="org.apache.tika.parser.DefaultParser"/>
+  <meta name="X-Parsed-By" content="org.apache.tika.parser.microsoft.OfficeParser"/>
+  <meta name="Content-Type" content="application/msword"/>
+  <title>
+  </title>
+</head>
+<body>
+  <div class="header"/>
+    <p class="body">Test DOC file content</p>
+  <div class="footer"/>
+</body>
+</html>
+```
+
+
+### OpenDocument text
+
+
+- Associated extension: `.odt`
+- `fileTypesToMatch`: `odt`
+
+### Excel spreadsheet
+
+- Associated extensions: `.xls`, `.xlsx`
+- `fileTypesToMatch`: `xls`
+
+<Media type="image" id="tools/crawler/xls_test.png" alt="" />
+
+For example, given the `.xls` file in the image above, the Tika server will expose the following HTML, which your crawler then passes to its `recordExtractor`.
+
+<Callout type="warning">
+  The metadata presented here is not guaranteed to appear on every document.
+</Callout>
+
+```html
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta name="X-Parsed-By" content="org.apache.tika.parser.DefaultParser"/>
+    <meta name="X-Parsed-By" content="org.apache.tika.parser.microsoft.OfficeParser"/>
+    <meta name="Content-Type" content="application/vnd.ms-excel"/>
+    <title>
+    </title>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Feuille 1</h1>
+      <table>
+        <tbody>
+          <tr>
+            <td>Test XLS file content</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="outside">&amp;C&amp;"Helvetica,Regular"&amp;12&amp;K000000&amp;P</div>
+    </div>
+  </body>
+</html>
+```
+
+
+### OpenDocument spreadsheet
+
+
+- Associated extension: `.ods`
+- `fileTypesToMatch`: `ods`
+
+
+### PowerPoint document
+
+
+- Associated extensions: `.ppt`, `.pptx`
+- `fileTypesToMatch`: `ppt`
+
+<Media type="image" id="tools/crawler/ppt_test.png" alt="" />
+
+For example, given the `.ppt` file in the image above, the Tika server will expose the following HTML, which your crawler then passes to its `recordExtractor`.
+
+<Callout type="warning">
+  The metadata presented here is not guaranteed to appear on every document.
+</Callout>
+
+```html
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta name="X-Parsed-By" content="org.apache.tika.parser.DefaultParser"/>
+    <meta name="X-Parsed-By" content="org.apache.tika.parser.microsoft.OfficeParser"/>
+    <meta name="Content-Type" content="application/vnd.ms-powerpoint"/>
+    <title>
+    </title>
+  </head>
+  <body>
+    <div class="slideShow">
+      <div class="slide">
+        <div class="slide-master-content"/>
+        <div class="slide-content">
+          <p>Test PPT file content</p>
+          <p/>
+        </div>
+      </div>
+      <div class="ocr"/>
+    </div>
+  </body>
+</html>
+```
+
+
+### OpenDocument presentation
+
+
+- Associated extension: `.odp`
+- `fileTypesToMatch`: `odp`
+
+
+### Email documents
+
+
+- Associated extension: `.msg`
+- `fileTypesToMatch`: `email`
+
+The file type `email` includes all documents related to electronic mail, currently the Crawler supports Outlook Mail Message (`.msg`).
+
+<Media type="image" id="tools/crawler/msg_test.png" alt="" />
+
+The Tika server converts the example email into the following HTML:
+
+<Callout type="warning">
+  The metadata presented here isn't guaranteed to appear on every document.
+</Callout>
+
+```html
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="date" content="2017-06-01T15:24:31Z" />
+  <meta name="Message:To-Email" content="to@domain.com" />
+  <meta name="dc:description" content="this is a mail to test msg file" />
+  <meta name="subject" content="this is a mail to test msg file" />
+  <meta name="dc:creator" content="from@domain.com" />
+  <meta name="Message:From-Email" content="from@domain.com" />
+  <meta name="dcterms:created" content="2017-06-01T15:24:31Z" />
+  <meta name="Message-To" content="to@domain.com" />
+  <meta name="dcterms:modified" content="2017-06-01T15:24:31Z" />
+  <meta name="Last-Modified" content="2017-06-01T15:24:31Z" />
+  <meta name="Message-Recipient-Address" content="to@domain.com" />
+  <meta name="Message:Raw-Header:X-Unsent" content="1" />
+  <meta name="Message:Raw-Header:Subject" content="this is a mail to test msg file" />
+  <meta name="meta:mapi-message-class" content="NOTE" />
+  <meta name="Message:To-Display-Name" content="to@domain.com" />
+  <meta name="Last-Save-Date" content="2017-06-01T15:24:31Z" />
+  <meta name="Message:Raw-Header:MIME-Version" content="1.0" />
+  <meta name="meta:save-date" content="2017-06-01T15:24:31Z" />
+  <meta name="dc:title" content="this is a mail to test msg file" />
+  <meta name="Message:Raw-Header:Message-ID" content="<c58b1b52f61f4789ba40339c6e993440>" />
+  <meta name="modified" content="2017-06-01T15:24:31Z" />
+  <meta name="Content-Type" content="application/vnd.ms-outlook" />
+  <meta name="X-Parsed-By" content="org.apache.tika.parser.DefaultParser" />
+  <meta name="X-Parsed-By" content="org.apache.tika.parser.microsoft.OfficeParser" />
+  <meta name="creator" content="from@domain.com" />
+  <meta name="Message:Raw-Header:From" content="from@domain.com" />
+  <meta name="meta:author" content="from@domain.com" />
+  <meta name="meta:creation-date" content="2017-06-01T15:24:31Z" />
+  <meta name="meta:mapi-from-representing-email" content="from@domain.com" />
+  <meta name="Creation-Date" content="2017-06-01T15:24:31Z" />
+  <meta name="Message-Cc" content="" />
+  <meta name="Message-Bcc" content="" />
+  <meta name="meta:mapi-from-representing-name" content="from@domain.com" />
+  <meta name="Message:Raw-Header:To" content="to@domain.com" />
+  <meta name="Message:From-Name" content="from@domain.com" />
+  <meta name="Author" content="from@domain.com" />
+  <meta name="Message-From" content="from@domain.com" />
+  <meta name="Message:To-Name" content="" />
+  <title>this is a mail to test msg file</title>
+</head>
+<body>
+  <h1>this is a mail to test msg file</h1>
+  <dl>
+    <dt>From</dt>
+    <dd>from@domain.com</dd>
+    <dt>To</dt>
+    <dd>to@domain.com</dd>
+    <dt>Recipients</dt>
+    <dd>to@domain.com</dd>
+  </dl>
+  <div class="message-body">
+    <p>This message was sent using a msg file </p>
+  </div>
+</body>
+</html>
+```
+
+## Enabling document extraction
+
+To enable document extraction, add the [`actions#fileTypesToMatch`](/tools/crawler/apis/configuration/actions#fileTypesToMatch) setting to at least one of your crawler's actions.
+The available `fileTypesToMatch` are:
+- `html` for web pages. This is the default when no `fileTypesToMatch` parameter is present
+- `pdf` for PDF documents
+- `doc`, `xls` and `ppt` for Microsoft Office documents
+- `odt`, `ods` and `odp` for Open documents
+- `email` for electronic mail documents
+
+When this setting is used and a document is encountered, the parameter `$` is assigned the transformed HTML of document. The file's type is stored in the [`actions#fileType`](/tools/crawler/apis/configuration/actions#fileType) parameter of your `recordExtractor`.
+
+```js
+({
+  [...]
+  actions: [
+    {
+      indexName: 'crawler-example',
+      pathsToMatch: ['https://www.example.com/**'],
+      fileTypesToMatch: ['pdf', 'doc'],
+      recordExtractor: ({ url, $, fileType }) => {
+        console.log($.html(), fileType);
+      }
+    },
+  ]
+});
+```
+
+You can checkout our Github repository of sample crawler configurations for an example of [a configuration file that implements document extraction](https://github.com/algolia/crawler-configurations-examples/blob/master/config.documents.js).

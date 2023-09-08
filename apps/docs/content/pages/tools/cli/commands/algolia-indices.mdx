@@ -1,0 +1,151 @@
+---
+navigation: "cli"
+title: |-
+  algolia indices
+description: |-
+  Manage your Algolia indices
+slug: tools/cli/commands/algolia-indices
+---
+
+## algolia indices clear
+
+Clear the specified index
+
+### Usage
+
+`algolia indices clear <index> [flags]`
+
+### Examples
+
+Clear the index named "MOVIES"
+
+```sh
+algolia index clear MOVIES
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+## algolia indices config
+
+Manage your Algolia index config (settings, synonyms, rules)
+
+### Usage
+
+`algolia indices config [flags]`
+
+## algolia indices copy
+
+Make a copy of an index
+
+### Usage
+
+`algolia indices copy <source-index> <destination-index> [flags]`
+
+### Examples
+
+Copy the records, settings, synonyms and rules from the "MOVIES_staging" index to the "MOVIES" index
+
+```sh
+algolia indices copy MOVIES_staging MOVIES
+```
+
+Copy only the synonyms of the "MOVIES_staging" to the "MOVIES" index
+
+```sh
+algolia indices copy MOVIES_staging MOVIES --scope synonyms
+```
+
+Copy the synonyms and rules of the index "MOVIES_staging" to the "MOVIES" index
+
+```sh
+algolia indices copy MOVIES_staging MOVIES --scope synonyms,rules
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+- `-s`, `--scope`: scope to copy (default: all)
+
+- `-w`, `--wait`: wait for the operation to complete
+
+## algolia indices delete
+
+Delete one or multiple indices
+
+### Usage
+
+`algolia indices delete <index> [flags]`
+
+### Examples
+
+Delete the index named "MOVIES"
+
+```sh
+algolia indices delete MOVIES
+```
+
+Delete the index named "MOVIES", skipping the confirmation prompt
+
+```sh
+algolia indices delete MOVIES -y
+```
+
+Delete multiple indices
+
+```sh
+algolia indices delete MOVIES MOVIES_staging MOVIES_dev
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+## algolia indices list
+
+List indices
+
+### Usage
+
+`algolia indices list [flags]`
+
+### Examples
+
+List indices
+
+```sh
+algolia indices list
+```
+
+### Output formatting flags
+
+- `--allow-missing-template-keys`: If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.
+
+- `-o`, `--output`: Output format. One of: (json, jsonpath, jsonpath-as-json, jsonpath-file).
+
+- `--template`: Template string or path to template file to use when --output=jsonpath, --output=jsonpath-file.
+
+## algolia indices move
+
+Move an index
+
+### Usage
+
+`algolia indices move <source-index> <destination-index> [flags]`
+
+### Examples
+
+Move the "MOVIES_staging" index to "MOVIES"
+
+```sh
+algolia indices move MOVIES_staging MOVIES
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+- `-w`, `--wait`: wait for the operation to complete
+

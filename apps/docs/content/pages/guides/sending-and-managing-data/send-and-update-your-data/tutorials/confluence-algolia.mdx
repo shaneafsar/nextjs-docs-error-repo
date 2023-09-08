@@ -1,0 +1,337 @@
+---
+navigation: "default"
+
+title: |-
+  Searching Confluence data
+description: |-
+  Import & sync data between Confluence & Algolia and build search on top of Confluence.
+slug: guides/sending-and-managing-data/send-and-update-your-data/tutorials/confluence-algolia
+---
+
+
+Using Algolia to search through your Confluence space brings powerful relevance tools and customization in displaying the results.
+It's also helpful when you want to centralize all your online resources (Google Drive, Dropbox, Salesforce…) under a single search experience.
+
+The self-hosted solution and cloud service of Confluence have distinct APIs.
+This tutorial uses [Confluence Cloud](https://developer.atlassian.com/cloud/confluence/rest/).
+
+This tutorial guides you into indexing the pages from Confluence Cloud, following these steps, using Node.js:
+
+- Getting your Confluence credentials
+- Fetching and indexing documents
+- Looping over the pagination
+- Setting up incremental updates
+
+## Prerequisites
+
+### Be familiar with Node.js
+
+This tutorial assumes you're familiar with Node.js, how it works, and how to create and run Node.js scripts.
+If you want to learn more before going further, read the following resources:
+
+- [Node.js Getting Started Guide](https://nodejs.org/en/docs/guides/getting-started-guide/)
+- [Node.js Docs](https://nodejs.org/en/docs/)
+
+Also, you need to [install Node.js](https://nodejs.org/en/) in your environment.
+
+### Have a Confluence and Algolia account
+
+As a prerequisite for this tutorial, you should already have:
+
+- A [Confluence account](https://www.atlassian.com/software/confluence),
+- An [Algolia account](https://dashboard.algolia.com/dashboard). If not, you can [create an account](https://dashboard.algolia.com/users/sign_up).
+
+## Install dependencies
+
+You need to connect to your Algolia account.
+For that, you can use the Algolia Search library.
+You should also install `Request-Promise-Native` to avoid using callbacks, and `striptags` to sanitize HTML data.
+
+Add these dependencies to your project by running the following command in your terminal:
+
+```sh
+npm install algoliasearch request-promise-native striptags
+```
+
+## Fetching data
+
+
+
+### Getting your Confluence credentials
+
+
+
+Confluence provides two ways to authenticate: JSON Web Tokens (JWT) and Basic Auth.
+The basic authentication is simpler.
+For more information on JWT authentication, you can read [Authentication for Apps](https://developer.atlassian.com/cloud/confluence/authentication-for-apps/) on the Confluence Cloud documentation.0
+
+On the Confluence Cloud admin panel, go to **Users › Invite user**, and add the new user's email address.
+It's best to use a service account email because you'll have to store the credentials, plus you'll be able to tweak the space and group permissions regardless of your employees' access levels. See [Invite, edit, and remove users](https://confluence.atlassian.com/cloud/invite-edit-and-remove-users-744721624.html) on the Confluence Cloud documentation to know more.
+
+On the first login, you'll be asked to create a password for the email you just invited. The email and password of this account are the credentials for Basic Auth.
+
+### Building the query
+
+First, create a `helpers.js` file and add a reusable function for querying resources.
+
+```js
+const rp = require('request-promise-native')
+
+const CONFLUENCE_HOST = 'https://yourdomain.atlassian.net/wiki'
+const CONFLUENCE_USERNAME = 'user@example.com'
+const CONFLUENCE_PASSWORD = 'user_password'
+
+module.exports = {
+  confluenceGet(uri) {
+    return rp({
+      url: CONFLUENCE_HOST + uri,
+      // GET parameters
+      qs: {
+        limit: 20, // number of item per page
+        orderBy: 'history.lastUpdated', // sort them by last updated
+        expand: [
+          // fields to retrieve
+          'history.lastUpdated',
+          'ancestors.page',
+          'descendants.page',
+          'body.view',
+          'space',
+        ].join(','),
+      },
+      headers: {
+        // auth headers
+        Authorization: `Basic ${Buffer.from(
+          `${CONFLUENCE_USERNAME}:${CONFLUENCE_PASSWORD}`
+        ).toString('base64')}`,
+      },
+      json: true,
+    })
+  },
+}
+```
+
+In a new `index.js` file, you can make your first API call:
+
+```js
+const { confluenceGet } = require('./helpers.js')
+
+const run = () => confluenceGet('/rest/api/content')
+
+run()
+```
+
+## Preparing the records
+
+Before sending content to Algolia, make sure to only include the attributes you need.
+You also need to keep your data as flat as possible for better performance.
+Therefore, create a `parseDocuments` function that takes an array of documents and returns properly formatted records.
+
+First, create two internal functions: `buildURL` to convert a Confluence URI into a full URL, and `parseContent` to clean up the HTML content.
+
+```js
+// helpers.js
+
+const rp = require('request-promise-native')
+const striptags = require('striptags')
+
+const buildURL = (uri) =>
+  uri ? CONFLUENCE_HOST + uri.replace(/^\/wiki/, '') : false
+
+const parseContent = (html) =>
+  html
+    ? striptags(html)
+        .replace(/(\r\n?)+/g, ' ')
+        .replace(/\s+/g, ' ')
+    : ''
+```
+
+Then, you can add the `parseDocuments` function:
+
+```js
+module.exports = {
+  confluenceGet(uri) {
+    // ...
+  },
+  parseDocuments(documents) {
+    return documents.map((doc) => ({
+      objectID: doc.id,
+      name: doc.title,
+      url: buildURL(doc._links.webui),
+      space: doc.space.name,
+      spaceMeta: {
+        id: doc.space.id,
+        key: doc.space.key,
+        url: buildURL(doc.space._links.webui),
+      },
+      lastUpdatedAt: doc.history.lastUpdated.when,
+      lastUpdatedBy: doc.history.lastUpdated.by.displayName,
+      lastUpdatedByPicture: buildURL(
+        doc.history.lastUpdated.by.profilePicture.path.replace(
+          /(\?[^\?]*)?$/,
+          '?s=200'
+        )
+      ),
+      createdAt: doc.history.createdDate,
+      createdBy: doc.history.createdBy.displayName,
+      createdByPicture: buildURL(
+        doc.history.createdBy.profilePicture.path.replace(
+          /(\?[^\?]*)?$/,
+          '?s=200'
+        )
+      ),
+      path: doc.ancestors.map(({ title }) => title).join(' › '),
+      level: doc.ancestors.length,
+      ancestors: doc.ancestors.map(({ id, title, _links }) => ({
+        id: id,
+        name: title,
+        url: buildURL(_links.webui),
+      })),
+      children: doc.descendants
+        ? doc.descendants.page.results.map(({ id, title, _links }) => ({
+            id: id,
+            name: title,
+            url: buildURL(_links.webui),
+          }))
+        : [],
+      content: parseContent(doc.body.view.value),
+    }))
+  },
+}
+```
+
+To explain what's happening in the example:
+
+- You deliberately set an `objectID` to avoid creating duplicates every time you run the script.
+
+- You parse the `lastUpdatedByPicture` to remove unnecessary parameters,
+  and append `s=200` to set the desired size of the output image (in pixels).
+
+
+
+- You set a `path` attribute to make ancestors searchable, and have subpages showing when searching for a document.
+
+
+- You set a `level` attribute that represents the depth of the document in the wiki tree.
+  It could be useful in the tie-breaking strategy.
+
+- You keep track of `ancestors` and `children` for presentation purposes,
+  in case you needed to display clickable breadcrumbs and dependencies.
+
+- You strip HTML and line breaks from the `content` to avoid noise during search.
+
+## Indexing content
+
+### Setting up your index
+
+In your Algolia [Dashboard](https://dashboard.algolia.com/dashboard/), create a new `confluence` index and add an API key with all the "records" permissions checked.
+
+### Sending to Algolia
+
+The Confluence API paginates results. To get them all, you need to keep on looping as long as there is a `next` link available in the response.
+
+Confluence space could get quite crowded. For that reason, it would be better for performance reasons to upload documents to Algolia in several batches, instead of sending one big payload.
+
+```js
+// index.js
+
+const algoliasearch = require('algoliasearch')
+const { confluenceGet, parseDocuments } = require('./helpers.js')
+
+const client = algoliasearch('YourApplicationID', 'YourWriteAPIKey')
+const index = client.initIndex('confluence')
+
+const run = () => {
+  const saveObjects = (link = '/rest/api/content') =>
+    confluenceGet(link).then(({ results, _links }) => {
+      index.saveObjects(parseDocuments(results)).then((res) => {
+        if (_links.next) saveObjects(_links.next)
+      })
+    })
+  saveObjects()
+}
+
+run()
+```
+
+## Dealing with large documents
+
+As you index the content of each document and not only their metadata, you may exceed the [record size limit](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/).
+Algolia recommends to [keep records small](/guides/sending-and-managing-data/prepare-your-data/how-to/indexing-long-documents/) to get more relevant and faster search.
+To prevent this, you can chunk the data and use the [distinct](/guides/managing-results/refine-results/grouping/) feature.
+This means you're going to save multiple records with the same metadata,
+each carrying a chunk of the content,
+but you set the search results to only show one document at a time.
+
+You need to update `parseDocuments` to split a document into several records, based on content length.
+
+```js
+// helpers.js
+
+module.exports = {
+  confluenceGet(uri) {
+    // ...
+  },
+  parseDocuments(documents) {
+    return documents.map(({ body }) => {
+      const record = {
+        // ...
+        content: null, // initialize with null value instead
+      }
+      let content = parseContent(body.view.value)
+      while (content.length) {
+        // extract the first 600 characters (without splitting words)
+        const chunk = content.replace(/^(.{600}[^\s]*).*/, '$1')
+        // remove chunk from the original content
+        content = content.substring(chunk.length)
+        // inject the content chunk into a copy of the initial record
+        return Object.assign({}, record, { content: chunk })
+      }
+    })
+  },
+}
+```
+
+You also need to set the attribute `name` as `attributeForDistinct` in the Algolia index.
+You can do this either programmatically or from your [dashboard](https://dashboard.algolia.com/dashboard/).
+
+```js
+index.setSettings({ attributeForDistinct: 'name' })).then(() => {
+  // done
+})
+```
+
+When you build your search, you'll need to set the `distinct` parameter to `true` in the search query, to make sure you only get one hit for each chunked document.
+
+## Incremental sync
+
+Incrementally synchronizing your data is about only indexing pages that were recently updated within a certain period of time (for example, the last 10 minutes) and running the script at a fixed interval. When your Confluence space has a large amount of pages, this prevents you from hitting the API rate limits and indexation will be fast.
+
+```js
+// index.js
+
+const run = (from = 0) => {
+  const saveObjects = (link = '/rest/api/content') => {
+    let lastUpdatedAt = 0
+    return confluenceGet(link).then(({ results, _links }) => {
+      index.saveObjects(parseDocuments(results)).then((res) => {
+        lastUpdatedAt = new Date(
+          results[results.length - 1].lastUpdatedAt
+        ).getTime()
+        if (_links.next && lastUpdatedAt >= from) saveObjects(_links.next)
+      })
+    })
+  }
+  saveObjects()
+}
+
+const args = process.argv.slice(2)
+const from = args.length
+  ? new Date(args[0]).getTime()
+  : Date.now() - 10 * 60 * 1000
+
+run(from)
+```
+
+From now on, you only need to schedule a job that will run `node index.js` every 10 minutes. If you need to run it from a specific date, run the script with the date as an ISO 8601 string in arguments (for example, `node index.js 2000-01-01T00:00:00+00:00`).
+
+You can also run `node index.js 0` to perform a full sync of your space.

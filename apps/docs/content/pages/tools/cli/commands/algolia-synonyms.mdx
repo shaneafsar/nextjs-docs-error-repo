@@ -1,0 +1,153 @@
+---
+navigation: "cli"
+title: |-
+  algolia synonyms
+description: |-
+  Manage your Algolia synonyms
+slug: tools/cli/commands/algolia-synonyms
+---
+
+## algolia synonyms browse
+
+List all the the synonyms of the given index
+
+### Usage
+
+`algolia synonyms browse <index> [flags]`
+
+### Examples
+
+List all the synonyms of the 'MOVIES' index
+
+```sh command="algolia synonyms browse MOVIES"
+algolia synonyms browse MOVIES
+```
+
+List all the synonyms of the 'MOVIES' and save them to the 'synonyms.json' file
+
+```sh
+algolia synonyms browse MOVIES > synonyms.json
+```
+
+### Output formatting flags
+
+- `--allow-missing-template-keys`: If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.
+
+- `-o`, `--output`: Output format. One of: (json, jsonpath, jsonpath-as-json, jsonpath-file).
+
+- `--template`: Template string or path to template file to use when --output=jsonpath, --output=jsonpath-file.
+
+## algolia synonyms delete
+
+Delete synonyms from an index
+
+### Usage
+
+`algolia synonyms delete <index> --synonyms <synonym-ids> --confirm [flags]`
+
+### Examples
+
+Delete one single synonym with the ID "1" from the "MOVIES" index
+
+```sh
+algolia synonyms delete MOVIES --synonym-ids 1
+```
+
+Delete multiple synonyms with the IDs "1" and "2" from the "MOVIES" index
+
+```sh
+algolia synonyms delete MOVIES --synonym-ids 1,2
+```
+
+### Flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+- `--forward-to-replicas`: Forward the delete request to the replicas
+
+- `--synonym-ids`: Synonym IDs to delete
+
+## algolia synonyms import
+
+Import synonyms to the index
+
+### Usage
+
+`algolia synonyms import <index> -F <file> [flags]`
+
+### Examples
+
+Import synonyms from the "synonyms.ndjson" file to the "MOVIES" index
+
+```sh
+algolia synonyms import MOVIES -F synonyms.ndjson
+```
+
+Import synonyms from the standard input to the "MOVIES" index
+
+```sh
+cat synonyms.ndjson | algolia synonyms import MOVIES -F -
+```
+
+Browse the synonyms in the "MOVIES_staging" index and import them to the "MOVIES" index
+
+```sh
+algolia synonyms browse MOVIES_staging | algolia synonyms import MOVIES -F -
+```
+
+Import synonyms from the "synonyms.ndjson" file to the "MOVIES" index and replace existing synonyms
+
+```sh
+algolia synonyms import MOVIES -F synonyms.ndjson -r
+```
+
+Import synonyms from the "synonyms.ndjson" file to the "MOVIES" index and don't forward the synonyms to the index replicas
+
+```sh
+algolia synonyms import MOVIES -F synonyms.ndjson -f=false
+```
+
+### Flags
+
+- `-F`, `--file`: Read synonyms to import from `file` (use "-" to read from standard input)
+
+- `-f`, `--forward-to-replicas`: Forward the synonyms to the replicas of the index
+
+- `-r`, `--replace-existing-synonyms`: Replace existing synonyms in the index
+
+## algolia synonyms save
+
+Save a synonym to the given index
+
+### Usage
+
+`algolia synonyms save <index> --id <id> --synonyms <synonyms> [flags]`
+
+### Examples
+
+Save one standard synonym with ID "1" and "foo" and "bar" synonyms to the "MOVIES" index
+
+```sh
+algolia synonyms save MOVIES --id 1 --synonyms foo,bar
+```
+
+### Flags
+
+- `-c`, `--corrections`: A list of corrections of the word (alt correction synonyms only)
+
+- `-f`, `--forward-to-replicas`: Forward the save request to the replicas
+
+- `-i`, `--id`: Synonym ID to save
+
+- `-n`, `--input`: Word of phrases to appear in query strings (one way synonyms only)
+
+- `-l`, `--placeholder`: A single word, used as the basis for the below array of replacements (placeholder synonyms only)
+
+- `-r`, `--replacements`: An list of replacements of the placeholder (placeholder synonyms only)
+
+- `-s`, `--synonyms`: Synonyms to save
+
+- `-t`, `--type`: Synonym type to save (default to regular)
+
+- `-w`, `--word`: A single word, used as the basis for the array of corrections (alt correction synonyms only)
+

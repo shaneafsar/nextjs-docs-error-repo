@@ -1,0 +1,285 @@
+---
+navigation: "default"
+
+title: |-
+  Indexing long documents
+description: |-
+  How to structure long documents by splitting them into smaller chunks, by paragraph, page, or any other logical breaking point.
+slug: guides/sending-and-managing-data/prepare-your-data/how-to/indexing-long-documents
+---
+
+
+If you want to index long documents with Algolia, you need to split them into smaller records. [There's a record size limit](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) for performance reasons, meaning each new "chunk" should realistically be a paragraph or two.
+
+Consider the case of a lengthy Wikipedia page with people adding new content all the time. If you indexed the whole page as a single record, you might hit the record size limit. Besides, [it's better to avoid indexing much content in a single record](https://www.algolia.com/blog/engineering/how-to-build-a-helpful-search-for-technical-documentation-the-laravel-example/), as it degrades search relevance. A better approach is to create small, hierarchical objects based on the structure of the page.
+
+This approach results in some redundancy of data. For that reason, you can use Algolia's [distinct feature](/guides/managing-results/refine-results/grouping/) to deduplicate records based on a single attribute.
+
+<Callout type="info">
+  Looking into indexing a documentation website? [Take a look at Algolia DocSearch](https://docsearch.algolia.com/), it's free.
+</Callout>
+
+## Modifying the data
+
+If you took the approach of creating one record per page, your dataset could look like this:
+
+```json
+[
+  {
+    "title": "Algolia",
+    "permalink": "https://en.wikipedia.org/wiki/Algolia",
+    "content": "Algolia is a U.S. startup company offering a web search product through a SaaS (software as a service) model.",
+    "sections": [
+      {
+        "name": "Company",
+        "content": "Algolia was founded in 2012 by Nicolas Dessaigne and Julien Lemoine, who are originally from Paris, France. It was originally a company focused on offline search on mobile phones. Later it was selected to be part of Y Combinator' s[1] Winter 2014 class.\nStarting with two data centres in Europe and the US, Algolia opened a third centre in Singapore in March 2014,[2] and as of 2016, claimed to be present in 47 locations across 15 worldwide regions.[3] It serves roughly 1,600 customers, handling 12 billion user queries per month.[4] Those customers are among e-commerce, medium and other fields, including DC Shoes, Medium and vevo.[5] In May 2015, Algolia received 18.3 million dollars in a series A investment from a financial group led by Accel Partners,[6] and in 2017 a $53M series B investment, also led by Accel Partners[7] From June 2016 to June 2017, the usage of Algolia by small websites has increased from 632 to 1,591 in the \"top 1mio websites\" evaluated by BuiltWith. In the same timeframe, BuiltWith recorded no significant usage increase among their \"top 10k homepages\".[8]"
+      },
+      {
+        "name": "Products and Technology",
+        "content": "The Algolia model provides search as a service, offering web search across a client's website using an externally hosted search engine.[9][10] Although in-site search has long been available from general web search providers such as Google, this is typically done as a subset of general web searching. The search engine crawls or spiders the web at large, including the client site, and then offers search features restricted to only that target site. This is a large and complex task, available only to large organisations at the scale of Google or Microsoft."
+      }
+    ]
+  }
+]
+```
+
+**This isn't an optimal approach.** As more and more people add new content, you might hit the record size limit. Also, this doesn't make for a great search experience. Full pages contain too much text, which leads to returning irrelevant results when a user performs searches.
+
+The right approach would be to **split content into smaller records, by paragraph**. With this strategy, a single page would result in several Algolia records. Here's an example of what this might look like:
+
+```json
+[
+  {
+    "title": "Algolia",
+    "permalink": "https://en.wikipedia.org/wiki/Algolia",
+    "content": "Algolia is a U.S. startup company offering a web search product through a SaaS (software as a service) model."
+  },
+  {
+    "title": "Algolia",
+    "section": "Company",
+    "permalink": "https://en.wikipedia.org/wiki/Algolia",
+    "content": "Algolia was founded in 2012 by Nicolas Dessaigne and Julien Lemoine, who are originally from Paris, France. It was originally a company focused on offline search on mobile phones. Later it was selected to be part of Y Combinator's[1] Winter 2014 class."
+  },
+  {
+    "title": "Algolia",
+    "section": "Company",
+    "permalink": "https://en.wikipedia.org/wiki/Algolia",
+    "content": "Starting with two data centres in Europe and the US, Algolia opened a third centre in Singapore in March 2014,[2] and as of 2016, claimed to be present in 47 locations across 15 worldwide regions.[3] It serves roughly 1,600 customers, handling 12 billion user queries per month.[4] Those customers are among e-commerce, medium and other fields, including DC Shoes, Medium and vevo.[5] In May 2015, Algolia received 18.3 million dollars in a series A investment from a financial group led by Accel Partners,[6] and in 2017 a $53M series B investment, also led by Accel Partners[7] From June 2016 to June 2017, the usage of Algolia by small websites has increased from 632 to 1,591 in the \"top 1mio websites\" evaluated by BuiltWith. In the same timeframe, BuiltWith recorded no significant usage increase among their \"top 10k homepages\".[8]"
+  },
+  {
+    "title": "Algolia",
+    "section": "Products and Technology",
+    "permalink": "https://en.wikipedia.org/wiki/Algolia",
+    "content": "The Algolia model provides search as a service, offering web search across a client's website using an externally hosted search engine.[9][10] Although in-site search has long been available from general web search providers such as Google, this is typically done as a subset of general web searching. The search engine crawls or spiders the web at large, including the client site, and then offers search features restricted to only that target site. This is a large and complex task, available only to large organisations at the scale of Google or Microsoft."
+  }
+]
+```
+
+With this approach, **you're eliminating the risk of ever hitting the record size limit**. You're also allowing for search results to be much more precise. Besides, you can handle the duplicate data with Algolia's [distinct feature](/guides/managing-results/refine-results/grouping/) by, for example, only retrieving one result per `section`.
+
+## Enabling the distinct feature
+
+### Using the API
+
+#### At indexing time
+
+To use [`distinct`](/api-reference/api-parameters/distinct) you first need to set `section` as [`attributeForDistinct`](/api-reference/api-parameters/attributeForDistinct) during indexing time. Then, you can set [`distinct`](/api-reference/api-parameters/distinct) to `true` to deduplicate your results.
+Note that setting [`distinct`](/api-reference/api-parameters/distinct) at indexing time is optional. If you want to, you can set it at query time instead.
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```scala
+client.execute {
+  changeSettings of "myIndex" `with` IndexSettings(
+    attributeForDistinct = Some("section"),
+    distinct = Some(true)
+  )
+}
+```
+
+    
+    ```go
+res, err := index.SetSettings(search.Settings{
+  opt.AttributeForDistinct("section"),
+  opt.Distinct(true),
+})
+```
+
+    
+    ```java
+index.setSettings(
+  new IndexSettings()
+    .setAttributeForDistinct("section")
+    .setDistinct(Distinct.of(true))
+);
+```
+
+    
+    ```csharp
+IndexSettings settings = new IndexSettings
+{
+    AttributeForDistinct = "section",
+    Distinct = true,
+};
+
+index.SetSettings(settings);
+
+// Asynchronous
+await index.SetSettingsAsync(settings);
+```
+
+    
+    ```kotlin
+val settings = settings {
+    attributeForDistinct = Attribute("section")
+    distinct = Distinct(1)
+}
+
+index.setSettings(settings)
+```
+
+    
+    ```swift
+index.setSettings([
+  "attributeForDistinct": "section",
+  "distinct": true
+])
+```
+
+    
+    ```python
+index.set_settings({
+    'attributeForDistinct': 'section',
+    'distinct': True
+})
+```
+
+    
+    ```js
+index.setSettings({
+  attributeForDistinct: 'section',
+  distinct: true
+}).then(() => {
+  // done
+});
+```
+
+    
+    ```php
+$index->setSettings([
+  'attributeForDistinct' => 'section',
+  'distinct' => true
+]);
+```
+
+    
+    ```ruby
+index.set_settings({
+  attributeForDistinct: 'section',
+  distinct: true
+})
+```
+
+</CodeSnippetGroup>
+
+
+
+#### At query time
+
+Once you've set [`attributeForDistinct`](/api-reference/api-parameters/attributeForDistinct), you can enable [`distinct`](/api-reference/api-parameters/distinct) by setting it to `true`. Note that you can set [`distinct`](/api-reference/api-parameters/distinct) to `true` or `1` interchangeably.
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```scala
+client.execute {
+  search into "myIndex" query Query(
+    query = Some("query"),
+    distinct = Some(true)
+  )
+}
+```
+
+    
+    ```go
+res, err := index.Search("query", opt.Distinct(true))
+```
+
+    
+    ```java
+index.search(
+        new Query("query").setDistinct(Distinct.of(true))
+);
+```
+
+    
+    ```csharp
+index.Search<JObject>(new Query("query")
+{
+    Distinct = true
+});
+```
+
+    
+    ```swift
+let query = Query(query: "query")
+query.distinct = true
+
+index.search(query, completionHandler: { (res, error) in
+  print(res)
+})
+
+```
+
+    
+    ```python
+results = index.search('query', {
+    'distinct': True
+})
+```
+
+    
+    ```js
+index.search('query', {
+  distinct: true
+}).then(({ hits }) => {
+  console.log(hits);
+});
+
+```
+
+    
+    ```php
+$results = $index->search('query', [
+  'distinct' => true
+]);
+```
+
+    
+    ```ruby
+results = index.search('query', {
+  distinct: true
+})
+```
+
+</CodeSnippetGroup>
+
+
+
+### Using the dashboard
+
+You can also set your attribute for distinct and enable distinct in your Algolia dashboard:
+
+1. Go to your dashboard, select the **Search** product and then select your index.
+1. Click the **Configuration** tab.
+1. In the **Search behavior** section, select **Deduplication and Grouping**.
+1. Set the **Distinct** drop-down menu option to `true`.
+1. Select your attribute in the **Attribute for Distinct** drop-down menu.
+1. Save your changes.

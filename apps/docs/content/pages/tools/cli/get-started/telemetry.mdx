@@ -1,0 +1,75 @@
+---
+navigation: "cli"
+
+title: |-
+  Telemetry
+description: |-
+  The Algolia CLI collects usage information by default. You can opt out.
+slug: tools/cli/get-started/telemetry
+---
+
+
+The Algolia CLI collects telemetry, such as the commands you use, your operating system, and your profile information.
+For details, see [Which information is collected](#which-information-is-collected) on this page.
+
+**The Algolia CLI doesn't collect sensitive information**, such as usernames, email addresses, or API keys.
+
+You can opt out of telemetry collection any time.
+
+## Opt out of telemetry for the current session
+
+If you're on macOS or Linux,
+you can turn off telemetry collection in your current session by setting the environment variable `ALGOLIA_CLI_TELEMETRY` to `0`.
+
+For example, in Bash-like shells, run:
+
+```bash
+export ALGOLIA_CLI_TELEMETRY=0
+```
+
+If you start a new shell session, you need to repeat this command if you want to opt out again.
+
+## Opt out of telemetry for all sessions
+
+To turn off telemetry collection **for all sessions**,
+run:
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```sh
+setx ALGOLIA_CLI_TELEMETRY 0
+refreshenv
+```
+
+    
+    ```sh
+echo "export ALGOLIA_CLI_TELEMETRY=0" >> ~/.profile
+source ~/.profile
+```
+
+    
+    ```sh
+echo "export ALGOLIA_CLI_TELEMETRY=0" >> ~/.profile
+source ~/.profile
+```
+
+</CodeSnippetGroup>
+
+
+
+## Which information is collected
+
+The Algolia CLI collects the following information:
+
+| Information | Description |
+| ----------- | ----------- |
+| Usage  | Which commands and sub-commands you run |
+| System | Operating system and version of the Algolia CLI |
+| Profile | Number of profiles and the active profile |
+
+The Algolia CLI is open source.
+You can [inspect the source code](https://github.com/algolia/cli) to see in detail, which information is collected.

@@ -1,0 +1,77 @@
+---
+navigation: "cli"
+
+title: |-
+  Authentication
+description: |-
+  To authenticate with the Algolia API, you can create profiles or use command-line options.
+slug: tools/cli/get-started/authentication
+---
+
+
+To make authenticating with Algolia easier,
+you can create **profiles** for different Algolia applications.
+A profile stores the application ID and API key under a friendly name.
+If you set up [command completion](/tools/cli/get-started/completion/),
+the Algolia CLI completes the available profile names for you.
+
+You can find your application ID and API key in the [Algolia dashboard](https://dashboard.algolia.com/account/api-keys/all/).
+
+## Create profiles
+
+To create a new profile, use the [`algolia profile add`](/tools/cli/commands/algolia-profile/#algolia-profile-add) command:
+
+```sh
+algolia profile add \
+        --name <name> \
+        --application-id <application-id> \
+        --admin-api-key <admin-api-key>
+```
+
+Now, you can use the option `--profile <name>` to authenticate your commands.
+
+<Callout type="info">
+  Profiles are stored in a configuration file in your home directory: `~/.config/algolia/config.toml`
+</Callout>
+
+## Default profile
+
+The first profile you add is set as default profile.
+You can omit `--profile` when using the default profile.
+
+For example, if the name of the default profile is `store`, and you want to search the `products` index,
+you can use one of the following commands:
+
+```sh
+algolia search products --query "" 
+# This has the same effect as:
+algolia search products --query "" --profile store
+# This has the same effect as:
+algolia search products --query "" \
+                        --application-id <application-id> \
+                        --admin-api-key <api-key>
+```
+
+To **change the default profile**, use the [`algolia profile setdefault`](/tools/cli/commands/algolia-profile/#algolia-profile-setdefault) command.
+
+## Using profiles
+
+To run commands for different profiles, use the `--profile <name>` option.
+
+For example, to list all indices in different profiles, run:
+
+```sh
+# List all indices of the default profile:
+algolia indices list 
+# List all indices in the ecommerce profile:
+algolia indices list --profile ecommerce
+```
+
+To get a list of all your profiles, use the [`algolia profile list`](/tools/cli/commands/algolia-profile/#algolia-profile-list) command.
+
+## Authentication without profiles
+
+If you don't want to create profiles,
+you can use the `--application-id` and `--admin-api-key` options for every command.
+This can be useful if you want to store your Algolia credentials elsewhere and reference them using
+environment variables—for example, in continuous deployment.

@@ -1,0 +1,91 @@
+---
+navigation: "default"
+
+title: |-
+  Quick start
+description: |-
+  Whether you're a developer or a business user, try Algolia's search and discovery products for yourself.
+slug: guides/getting-started/quick-start
+---
+
+
+This guide shows you how to try Algolia's search and discovery products for yourself.
+
+## What do you want to do?
+
+If you want to see how Algolia works, [create an account](#sign-up-for-an-algolia-account), try out one or more of the tutorials, find out how you can [use your data](#use-your-data), and read about how [analytics, relevance, and insights](#analytics-relevance-and-insights) can help measure the success of your implementation.
+Check out the integrations guides if you **want to know how to integrate Algolia with [Shopify](/integration/shopify/getting-started/quick-start/), [Magento 2](/integration/magento-2/getting-started/quick-start/), [Netlify](/tools/crawler/netlify-plugin/quick-start/), or [Salesforce](/integration/salesforce-commerce-cloud-b2c/getting-started/introduction/)**.
+If you **want to see what Algolia can do**, visit [the inspiration library](https://www.algolia.com/search-inspiration-library/) and check out one or more of those sites to try it out.
+
+## Sign up for an Algolia account
+
+Each of the following tutorials requires your own Algolia account. [Sign up](https://dashboard.algolia.com/users/sign_up) for free and try things out for yourself:
+
+- [Run the Quickstart Assistant tutorial](#run-the-quickstart-assistant-tutorial)
+- [Run the interactive tutorial](#run-the-two-minute-tutorial)
+- [Create a 'bootstrapped' (quick start) search project](#create-a-bootstrapped-search-project).
+
+
+
+### Run the Quickstart Assistant tutorial
+
+
+
+When you create a new Algolia account, [the dashboard's](https://www.algolia.com/dashboard) **Quickstart Assistant** will offer you several choices. Choose **New to Algolia** to begin the Quickstart Assistant's interactive tutorial.
+
+1. Follow the **Quickstart Assistant** prompts. You can use your data, the data provided by the assistant, or import [the data](https://github.com/algolia/datasets/blob/master/ecommerce/records.json) used in the ['Bootstrap' tutorial](#create-a-bootstrapped-search-project).
+2. Click on **Indices** in the dashboard's sidebar menu, click the **UI Demos** tab, and then the **Generate a UI demo** button.
+3. Complete the fields you require and **Save**.
+4. Click the _eye icon_ next to your newly saved demo to preview it.
+
+### Run the two-minute tutorial
+
+The two-minute [interactive tutorial](/onboarding/) walks you through the steps required to build an Algolia user interface. It covers choosing a dataset, sending that data to Algolia, examining the effect of changing relevance, and building a user interface.
+
+### Create a "bootstrapped" search project
+
+For each library supported by Algolia, there is a 'bootstrap' tutorial that takes you through the following:
+
+1. Installing and initializing the pre-built project
+2. Adding code to display a user interface: a search box with highlighted results
+3. Adding more elements to the UI: filters and pagination
+4. Adding more information and styling to search results.
+
+#### Choose your bootstrap tutorial
+
+
+
+Once you have explored the bootstrap tutorial, try using _your_ data instead. It will help your overall implementation if you also consider how to measure the success of your Algolia implementation once it's live by understanding how to interpret [analytics, tweak relevance, and capture user insights](#analytics-relevance-and-insights).
+
+### Use your data
+
+In the preceding tutorials, you were probably using pre-built datasets. In reality, you need to transform your data into [an acceptable JSON format](/guides/sending-and-managing-data/prepare-your-data/#algolia-records) and then [send that data to Algolia (using [an Algolia API client, no-code connector, CLI, Crawler, or dashboard)](/guides/sending-and-managing-data/send-and-update-your-data/).
+
+<Callout type="info">
+  On a live site, you need to create a script to [update your index](/guides/sending-and-managing-data/send-and-update-your-data/how-to/incremental-updates/) whenever the site content changes: new material, edits, and deletions. However, if you're using them, the no-code connector and Crawler will handle this synchronization for you.
+</Callout>
+
+### Analytics, relevance, and insights
+
+Search relevance measures the accuracy of the relationship between the search query and the search results. Algolia has good relevance out of the box, thanks to its [ranking criteria](/guides/managing-results/relevance-overview/in-depth/ranking-criteria/). The system also [provides tools](/guides/managing-results/relevance-overview/#getting-the-best-from-algolia) to help fine-tune your users' search experience. Of these, the most important ones are:
+
+- [Deciding which attributes you want to use for searching and in what order and manner to search them](/guides/managing-results/must-do/searchable-attributes/)
+- [Applying tweaks to improve the relevance for your specific needs using custom ranking](/guides/managing-results/must-do/custom-ranking/).
+
+#### Use analytics to review the effectiveness of search
+
+[Review your analytics](/guides/search-analytics/overview/) for details such as popular and 'no results' phrases to verify that any changes you made to relevance have positively affected your users' behavior. These insights allow you to make informed decisions about adjusting searchable attributes, custom ranking, and other aspects of relevance.
+
+[Consider using A/B testing](/guides/ab-testing/what-is-ab-testing/) to compare one set of adjustments with another to see which performs best.
+
+#### Insights: what happens after the search
+
+Often, search isn't a standalone goal: it's an aid to achieving broader aims. For example, the aim of an ecommerce site may be to increase sales, increase profits, or drive a particular product range. [By capturing user behavior](/guides/sending-events/getting-started/), you can see what happens _after_ they have performed a search and determine if the search implementation has helped achieve your goals.
+
+## What's next?
+
+This quick start guide has given you a flavor of what Algolia can offer and an idea of how to build a solution. To find out more, here are some crucial resources.
+
+<div className="panel">
+  {/* Partial: panel/table.haml */}
+</div>

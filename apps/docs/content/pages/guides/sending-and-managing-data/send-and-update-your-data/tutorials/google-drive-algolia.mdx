@@ -1,0 +1,423 @@
+---
+navigation: "default"
+
+title: |-
+  Searching Google Drive
+description: |-
+  Import & sync data between Google Drive & Algolia and build search on top of Google Drive.
+slug: guides/sending-and-managing-data/send-and-update-your-data/tutorials/google-drive-algolia
+---
+
+
+
+
+## Introduction
+
+Importing the documents hosted in your company's Google Drive to Algolia will significantly lower the time spent to find internal resources.
+In this tutorial, you will learn how to import your Google Drive documents into Algolia using Node.js, and benefit from Algolia's search engine.
+
+
+## Prerequisites
+
+### Familiar with Node.js
+
+This tutorial assumes you are familiar with Node.js, how it works, and how to create and run Node.js scripts. If you want to learn more before going further, we recommend you read the following resources:
+
+- [Node.js Getting Started Guide](https://nodejs.org/en/docs/guides/getting-started-guide/)
+- [Node.js Docs](https://nodejs.org/en/docs/)
+
+Also, you need to [install Node.js](https://nodejs.org/en/) in your environment.
+
+### Have a Google Drive and Algolia account
+
+For this tutorial, we assume that you:
+
+- already have a [Google Drive account](https://www.google.com/drive/),
+- already created an [Algolia account](https://dashboard.algolia.com/dashboard). If not, you can [create an account](https://dashboard.algolia.com/users/sign_up).
+
+## Getting your Google credentials
+
+Before we get started, you should follow this [Google tutorial](https://developers.google.com/drive/api/v3/quickstart/nodejs). It will show you how to generate your client secret and an authentication token, which are necessary to authenticate your requests to the Drive API.
+
+Make sure you complete every step. At the end of the tutorial, you should have two files: `token.json` and `credentials.json`.
+
+### Scopes
+
+Each endpoint of the Google API is protected by permission scopes.
+For instance, to use the `list` endpoint for listing documents,
+you will need [6 scopes](https://developers.google.com/drive/api/v3/reference/files/list).
+
+In our case, we need to access 3 endpoints: [list](https://developers.google.com/drive/api/v3/reference/files/list),
+[get](https://developers.google.com/drive/api/v3/reference/files/get)
+and [export](https://developers.google.com/drive/api/v3/reference/files/export). Therefore, make sure the token you create has the following scopes:
+
+```js
+const SCOPES = [
+  'https://www.googleapis.com/auth/drive',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
+  'https://www.googleapis.com/auth/drive.metadata',
+  'https://www.googleapis.com/auth/drive.photos.readonly'
+];
+```
+
+From this point on, we will assume that you:
+
+- downloaded your `credentials.json` file from your Google API admin page,
+- generated your `token.json` (or `access_token.js`) file from the Node.js Google tutorial, with the scopes defined above.
+
+For security reasons, we strongly recommend you to store the content of both files in environment variables (or a database). With environment variables, you would simply access the values this way:
+
+```js
+const googleCredentials = JSON.parse(process.env.credentials);
+const accessToken = JSON.parse(process.env.token);
+```
+
+## Install dependencies
+
+We will use the [Google APIs Node.js client](https://www.npmjs.com/package/googleapis), a Node.js wrapper for most Google APIs.
+
+You also need to connect to your Algolia account. For that, you can use our Algolia Search library. Finally, we'll also install CircularJSON to handle JSON objects containing circular references, and Moment.js to simplify date manipulation.
+
+Let's add these dependencies to your project by running the following command in your terminal:
+
+```sh
+npm install googleapis algoliasearch circular-json moment
+```
+
+## Connect via the Google APIs client
+
+We will connect to the API using the credentials and token we generated earlier.
+
+```js
+const { google } = require('googleapis');
+
+const getClient = ({installed}, accessToken) => {
+  const OAuth2 = google.auth.OAuth2;
+  const client = new OAuth2(
+    installed.client_id,
+    installed.client_secret,
+    installed.redirect_uris[0]
+  );
+  client.setCredentials(accessToken);
+
+  return client;
+};
+```
+
+You should now be able to use this client to access Drive API endpoints.
+
+### Refresh token
+
+The access token expires over time. This library will automatically use
+a [refresh token](https://github.com/google/google-api-nodejs-client#handling-refresh-tokens) to obtain a new access token if it is about to expire.
+If you inspect your `accessToken`, you can see a `refreshToken` property that is used to refresh an invalid token.
+
+Using `client.refreshAccessToken` maintains the validity of your token.
+
+```js
+const CircularJSON = require('circular-json');
+
+const refreshToken = client => client
+  .refreshAccessToken()
+  .then(({access_token}) => {
+    client.credentials.access_token = access_token;
+    // we update our environment variable with the right token
+    process.env.token = CircularJSON.stringify(client.credentials);
+  })
+  .catch(e => e);
+```
+
+We can now refresh tokens when needed.
+
+## Listing documents
+
+Depending on your use case, you might want to index all of your Google Drive content, or just the most recent documents. Either way, it is only a matter of adjusting two attributes: `modifiedTime` or `createdTime`.
+
+Here is an example:
+
+```js
+const { google } = require('googleapis');
+
+const getLastUpdatedFiles = (client, from, pageToken) => {
+  const drive = google.drive({
+    version: 'v3',
+    auth: client
+  });
+
+  const options = {
+    pageSize: 1000,
+    q: `modifiedTime > '${from}' and (mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/pdf')`
+  };
+
+  if (pageToken) {
+    options.pageToken = pageToken;
+  }
+
+  return drive.files
+    .list(options)
+    .then(({data}) => data)
+    .catch(err => err);
+};
+```
+
+The API will return an array of document IDs that match your query (up to 1000 documents). If you want to query more, you need to use the `nextPageToken` attribute in the JSON response of each result to go through the entire dataset.
+
+## Getting document metadata
+
+At this stage, you have an array of document IDs. For each `id`, you need to fetch the document metadata to have access to information such as `mimeType`,
+`size`, etc. This will help you determine whether you want to index the document or not.
+
+```js
+const getFile = (client, googleId) => {
+  const drive = google.drive({
+    version: 'v3',
+    auth: client
+  });
+
+  return drive.files
+    .get({
+      fileId: googleId,
+      fields:
+        'id, name, description, mimeType, size, webContentLink, createdTime, modifiedTime, lastModifyingUser'
+    })
+    .then(({data}) => data)
+    .catch(err => err);
+};
+```
+
+The `fields` attribute will define the type of metadata you want the API to return.
+
+## Indexing a document
+
+Depending on your use case, you may not want to index everything. At Algolia, we have a few PDF books on our Drive that are over 700 MB, but there is not a single use case where we would actually need to search trough the entire book.
+
+### Case 1: you don't want to index the content
+
+If a file is over 700MB, we don't want to index the content.
+
+```js
+getFile(client, googleId)
+  .then(({ size, name, id }) => {
+    if (size > 700000) {
+      const record = {
+        googleId: id,
+        name,
+        modifiedTime,
+        content: null
+      };
+      index.addObject(record);
+    }
+  })
+  .catch(err => err);
+```
+
+You can see that the `content` property is set to `null`. We indexed the document without its content, only its name and metadata.
+
+### Case 2: you want to index the content
+
+The Google API lets you access a document's content via the `drive.files.export` endpoint:
+
+```js
+const download = (client, id, callback) => {
+  const drive = google.drive({
+    version: 'v3',
+    auth: client
+  });
+
+  drive.files.export(
+    {
+      fileId: id,
+      mimeType: 'text/plain'
+    },
+    callback
+  );
+};
+```
+
+Here, we convert a `application/vnd.google-apps.document` into a `text/plain`, right from the API response.
+
+Putting it all together, it would look like this:
+
+```js
+const algoliasearch = require('algoliasearch');
+const index = algoliasearch('YourApplicationID', 'YourWriteAPIKey').initIndex(
+  'YourIndexName'
+);
+
+getFile(client, googleId).then(({ size, name, id }) => {
+  if (size > 700000) {
+    index.addObject({
+      googleId: id,
+      name,
+      modifiedTime,
+      content: null
+    });
+  } else {
+    download(client, id, (err, { data }) => {
+      index.addObject({
+        googleId: id,
+        name,
+        modifiedTime: doc.modifiedTime,
+        content: data
+      });
+    });
+  }
+});
+```
+
+#### Large documents
+
+Sometimes, you can't have a single record per document because the content is over 10 KB, the allowed limit for an Algolia record. In this case, you would need to split the content into several records (for example, one for each new line).
+
+```js
+function getChunks(bigText) {
+  return bigText.match(/(.|[\r\n]){1,n}/g);
+}
+
+getFile(client, googleId).then(({id, name, modifiedTime}) => {
+  download(client, id, (err, {data}) => {
+    const records = getChunks(data).map(chunk => ({
+      googleId: id,
+      name: name,
+      modifiedTime: modifiedTime,
+      content: chunk
+    }));
+    index.saveObjects(records, { autoGenerateObjectIDIfNotExist: true });
+  });
+});
+```
+
+Since we have several records representing the same document, an end user might perform a search and gets several results for the same document. To avoid this, you can leverage the [distinct](/guides/managing-results/refine-results/grouping/) feature on the `googleId` attribute. This will ensure you can only get one result per `googleId`.
+
+### Different MIME type
+
+The Google API does not export to `text/plain` for all possible MIME types.
+Depending on which, you might have to [download](https://developers.google.com/drive/api/v3/manage-downloads) the document and extract the content yourself.
+
+## Putting it all together
+
+Let's say we want to index Google documents only (with a `application/vnd.google-apps.document` MIME type). Our final code could look like this:
+
+```js
+// the function is written in one single block to show all the different steps
+// we encourage to split it in different function
+
+const algoliasearch = require('algoliasearch');
+const index = algoliasearch('YourApplicationID', 'YourWriteAPIKey').initIndex(
+  'YourIndexName'
+);
+const client = getClient(googleCredentials, accessToken);
+let nextPageToken;
+do {
+  // we get the list of updated files
+  getLastUpdatedFiles(client, '2018-01-01')
+    .then(list => {
+      const documentsToIndex = list.files;
+      const start = 0;
+      nextPageToken = list.nextPageToken;
+      // recursive function that indices documents one by one
+      indexDocument(client, documentsToIndex, start);
+    })
+    .catch(e => e);
+} while (nextPageToken);
+
+function indexDocument(client, documents, cursor) {
+  // step 1: we get the metadata
+  const document = documents[cursor];
+  if (!document) return;
+
+  getFile(client, document.id)
+    .then(document => {
+      console.log(document);
+      // step 2: we only want to index Google documents
+      if (document.mimeType === 'application/vnd.google-apps.document') {
+        // step 3: we download the documents
+        download(client, document.id, (err, {data}) => {
+          const chunks = [];
+          const records = [];
+          const text = data;
+          if (text.length > 5000) {
+            const chuncksText = getChunks(text);
+            chunks.concat(chuncksText);
+          } else {
+            chunks.push(text);
+          }
+          // step 4: we create the Algolia records
+          for (let j = 0; j < chunks.length; j++) {
+            records.push({
+              googleId: document.id,
+              name: document.name,
+              modifiedTime: document.modifiedTime,
+              content: chunks[j]
+            });
+          }
+          // step 5: we push them to Algolia and continue indexing the list of documents
+          if (records.length) {
+            index.addObjects(records, (err, res) => {
+              indexDocument(client, documents, cursor + 1);
+            });
+          } else {
+            indexDocument(client, documents, cursor + 1);
+          }
+        });
+      } else {
+        indexDocument(client, documents, cursor + 1);
+      }
+    })
+    .catch(e => e);
+}
+```
+
+## Keeping Algolia in sync with Google Drive
+
+Now that we can import documents, we want to keep it in sync as it changes over time. For that, you can use the following strategy:
+
+1. Run the above script above every 5 minutes, and pass a date object equal to now minus 5 minutes, as the `from` parameter. Every 5 minutes, it would index all documents updated in the last 5 minutes.
+2. For each document, check in your Algolia index if any record with the same `googleId` exists and delete them.
+3. Push the records to your index.
+
+## Improving relevance
+
+Now that your documents are indexed in Algolia, we can improve search relevance by setting a few options on the index.
+
+Go to your [Algolia dashboard](https://dashboard.algolia.com/dashboard/) and find index.
+
+### Configure your searchable attributes
+
+To start making your search relevant, you can add the following attributes as searchable:
+
+- `name` of the document,
+- `content` of the document,
+- `googleId` of the documents (so that you can identify and delete records based on it).
+
+In addition to that, you can add more searchable attributes depending on what makes sense for your use case.
+
+### Configure your custom ranking
+
+This setting is crucial and will help making your search more powerful by sorting the relevant results according to what matters to you and your business. At Algolia, we use the `modifiedTime` property to sort results from the last modified document to the oldest. This keeps users from retrieving obsolete documents.
+
+### Distinct attribute on `googleId`
+
+As mentioned earlier, if you have several records per document, don't forget to add `googleId` in as attribute for distinct so you can use the [distinct](/api-reference/api-parameters/distinct/) feature. This way, you can ensure that results never contain the same document several times.
+
+### Faceting
+
+We recommend you also add the `mimeType` attribute as facet. By adding a faceting menu on your search page, your users will be able to filter on a specific document type.
+
+## Limitations
+
+### Missing documents
+
+There can usually be two causes: **access rights** and **delay between creating a document and sharing it**.
+
+#### Access rights
+
+You need to make sure your document is shared to the right space. If you want 100% accuracy, the solution would be to have one Google authentication per user, store their secret tokens, and run the job for each. This would be more intensive, but you'd be able to access public and private documents.
+
+#### Sharing a document after creating/editing the document
+
+Sometimes, people create their Google documents but don't share it immediately. Therefore, when your user will share the document, the `modifiedTime` will be way before `now minus 5 minutes`, since sharing a document is not considered as an update.
+
+It's quite difficult to work around this issue. Yet, you could have a daily job that reindexes everything that was created over the past 6 months.

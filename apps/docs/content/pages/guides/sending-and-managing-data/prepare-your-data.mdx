@@ -1,0 +1,129 @@
+---
+navigation: "default"
+
+title: |-
+  Format and structure your data
+description: |-
+  How to prepare your data, format and structure your attributes, records, and indices to improve search results with Algolia.
+slug: guides/sending-and-managing-data/prepare-your-data
+---
+
+
+Before you can search your content, **you need to send your data to Algolia**. Algolia doesn't search in your original data source but in the data you submit, which Algolia hosts on its servers.
+
+Here's the process:
+
+1. **You fetch data from your sources**, such as a database or static files.
+2. **You transform that data into JSON records**.
+3. **You send the records to Algolia** using an integration, an API client, the Algolia CLI, or the Algolia dashboard. This is the indexing step.
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>
+
+### Fetch data from your data source
+
+Algolia doesn't directly search your data source: instead, you must send it to Algolia's servers. Your source data may be in a database, a collection of XML files, spreadsheets, or any other format. Before you can search your data, you must extract it from your sources and [transform it into a format Algolia understands](#transform-the-extracted-data) (JSON records).
+
+**You don't need to extract everything:** be selective about what goes in the record and only gather the information that helps build your search experience.
+
+### Transform the extracted data
+
+**[Formatting and structuring your data](#algolia-records) is one of the most critical aspects of creating excellent search and relevance**. Along with turning your data into JSON records, you may need to refine the records by changing their contents or adding new information.
+
+### Send data to Algolia
+
+Once your records are ready, [send them to Algolia](/guides/sending-and-managing-data/send-and-update-your-data/) using an Algolia API client, no-code connector, CLI, Crawler, or dashboard. Once the records are in an [Algolia index](#algolia-index), you can search them.
+
+## Algolia records
+
+An Algolia **record** is a collection of _attributes_ where each attribute has a name and a value (a key-value pair).
+
+Here is an example record with four [different kinds of attribute](/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/) (string, integer, array, and boolean):
+
+```json
+{
+  "title": "Blackberry and blueberry pie",
+  "description": "A delicious pie recipe that combines blueberries and blackberries.",
+  "image": "https://yourdomain.com/blackberry-blueberry-pie.jpg",
+  "likes": 1128,
+  "sales": 284,
+  "categories": ["pie", "dessert", "sweet"],
+  "gluten_free": false
+}
+```
+
+Your records should only include information that helps with searching, showing results, sorting, and [relevance](/guides/managing-results/relevance-overview/#what-is-relevance). You can leave everything else out.
+
+<Callout type="info">
+  Attributes don't have to follow a specific schema (pattern) - they can differ for each record.
+</Callout>
+
+### Searchable attributes
+
+All attributes are searchable by default, but, to make searching more relevant, you should **set only some attributes as searchable**. You can do this with the [searchable attributes](/guides/managing-results/must-do/searchable-attributes/) feature. You can also use this setting to rank your searchable attributes, making some more relevant than others.
+
+Textual, descriptive attributes, such as summaries, brands, or colors, can be helpful as searchable attributes. For instance, in a recipe app, to help users search for "blueberry pie", you need an attribute containing those words, such as a `title` attribute.
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>
+
+### Attributes for displaying
+
+**Display attributes** are those attributes that can be useful to show in the search results. They can include:
+
+- Titles
+- Descriptions
+- Attributes used for filtering and custom ranking, such as the number of likes or categories
+- Images. To display images in your results, you need an image URL attribute in your records. This way, Algolia can return them in search results for you to display on the frontend.
+
+Some display attributes, such as `title` and `description`, can also be searchable. Others, such as `image` or `likes`, shouldn't be set as searchable.
+
+### Attributes for filtering
+
+Sometimes, you might want to find a specific subset (category) of your records. For example, you might want to find all the pie recipes or all the gluten-free desserts. You can do this by setting some attributes as [filters](/guides/managing-results/refine-results/filtering/) to narrow down search results.
+The following are examples of attributes that you can filter:
+
+- Booleans (like whether an item is public)
+- Lists (categories, tags)
+- Numeric attributes (price, rounded rating)
+- Normalized text (colors, types, or enumerated types).
+
+### Custom ranking attributes
+
+Custom ranking makes Algolia's search results more relevant for your users by including _your_ business metrics.
+
+For example, in a recipe app, you can add business-metric attributes such as `likes` and `sales`to make the most popular recipes appear first in results.
+
+<Callout type="info">
+  Custom ranking attributes must be either numeric or boolean.
+</Callout>
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>
+
+### Simplify your records
+
+When making an Algolia index, make your records as simple as possible.
+
+Each record should have enough information for users to find it quickly. When users search for something, Algolia returns records as results that match their search. **Each record should contain all the information users need to find it and to display its content.**
+
+<Callout type="info">
+  Don't worry about following relational database principles, such as not repeating data or creating hierarchical structures with primary and foreign keys.
+</Callout>
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>
+
+## Algolia index
+
+An index is where the data used by Algolia's search and discovery engine is stored. It's the equivalent of a table in a database but optimized for search and discovery operations. An index is created [when you send records to Algolia](/guides/sending-and-managing-data/send-and-update-your-data/). You can create several indices that contain different sets of records. All indices live on Algolia's servers.
+
+Once you've sent your data to Algolia, you can decide how to organize your indices. This includes how many you need and how to configure each one. You can put all your records into a single extensive index or spread them across a few smaller indices. **How you organize your indices depends on how you want to search and display your records.**
+
+<div className="panel">
+{/* Partial: panel/table.haml */}
+</div>

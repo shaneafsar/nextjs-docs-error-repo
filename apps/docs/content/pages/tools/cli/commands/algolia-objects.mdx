@@ -1,0 +1,399 @@
+---
+navigation: "cli"
+title: |-
+  algolia objects
+description: |-
+  Manage your indices' objects
+slug: tools/cli/commands/algolia-objects
+---
+
+## algolia objects browse
+
+Browse the index objects
+
+### Usage
+
+`algolia objects browse <index> [flags]`
+
+### Examples
+
+Browse the objects from the "MOVIES" index
+
+```sh command="algolia objects browse MOVIES"
+algolia objects browse MOVIES
+```
+
+Browse the objects from the "MOVIES" index and select which attributes to retrieve
+
+```sh command="algolia objects browse MOVIES --attributesToRetrieve title,overview"
+algolia objects browse MOVIES --attributesToRetrieve title,overview
+```
+
+Browse the objects from the "MOVIES" index with filters
+
+```sh command="algolia objects browse MOVIES --filters "genres:Drama""
+algolia objects browse MOVIES --filters "genres:Drama"
+```
+
+Browse the objects from the "MOVIES" and export the results to a new line delimited JSON (ndjson) file
+
+```sh
+algolia objects browse MOVIES > movies.ndjson
+```
+
+### Advanced
+
+- `--attributeCriteriaComputedByMinProximity`: When attribute is ranked above proximity in your ranking formula, proximity is used to select which searchable attribute is matched in the attribute ranking stage.
+
+- `--distinct`: Enables de-duplication or grouping of results.
+
+- `--enableABTest`: Whether this search should participate in running AB tests.
+
+- `--enableReRanking`: Whether this search should use AI Re-Ranking.
+
+- `--getRankingInfo`: Retrieve detailed ranking information.
+
+- `--maxFacetHits`: Maximum number of facet hits to return during a search for facet values. For performance reasons, the maximum allowed number of returned values is 100.
+
+- `--minProximity`: Precision of the proximity ranking criterion.
+
+- `--percentileComputation`: Whether to include or exclude a query from the processing-time percentile computation.
+
+- `--renderingContent`: Content defining how the search interface should be rendered. Can be set via the settings for a default value and can be overridden via rules.
+
+- `--responseFields`: Choose which fields to return in the API response. This parameters applies to search and browse queries.
+
+- `--synonyms`: Whether to take into account an index's synonyms for a particular search.
+
+### Faceting
+
+- `--attributesForFaceting`: The complete list of attributes that will be used for faceting.
+
+- `--facetingAfterDistinct`: Force faceting to be applied after de-duplication (via the Distinct setting).
+
+- `--facets`: Retrieve facets and their facet values.
+
+- `--maxValuesPerFacet`: Maximum number of facet values to return for each facet during a regular search.
+
+- `--sortFacetValuesBy`: Controls how facet values are fetched.
+
+### Pagination
+
+- `--hitsPerPage`: Set the number of hits per page.
+
+- `--length`: Set the number of hits to retrieve (used only with offset).
+
+- `--offset`: Specify the offset of the first hit to return.
+
+- `--page`: Specify the page to retrieve.
+
+### Personalization
+
+- `--enablePersonalization`: Enable the Personalization feature.
+
+- `--personalizationImpact`: Define the impact of the Personalization feature.
+
+- `--userToken`: Associates a certain user token with the current search.
+
+### Ranking
+
+- `--customRanking`: Specifies the custom ranking criterion.
+
+- `--ranking`: Controls how Algolia should sort your results.
+
+- `--relevancyStrictness`: Controls the relevancy threshold below which less relevant results aren't included in the results.
+
+### Rules
+
+- `--enableRules`: Whether Rules should be globally enabled.
+
+- `--ruleContexts`: Enables contextual rules.
+
+### Typos
+
+- `--allowTyposOnNumericTokens`: Whether to allow typos on numbers ("numeric tokens") in the query string.
+
+- `--disableTypoToleranceOnAttributes`: List of attributes on which you want to disable typo tolerance.
+
+- `--minWordSizefor1Typo`: Minimum number of characters a word in the query string must contain to accept matches with 1 typo.
+
+- `--minWordSizefor2Typos`: Minimum number of characters a word in the query string must contain to accept matches with 2 typos.
+
+- `--typoTolerance`: Controls whether typo tolerance is enabled and how it is applied.
+
+### Attributes
+
+- `--attributesToRetrieve`: This parameter controls which attributes to retrieve and which not to retrieve.
+
+- `--restrictSearchableAttributes`: Restricts a given query to look in only a subset of your searchable attributes.
+
+### Filtering
+
+- `--facetFilters`: Filter hits by facet value.
+
+- `--filters`: Filter the query with numeric, facet and/or tag filters.
+
+- `--numericFilters`: Filter on numeric attributes.
+
+- `--optionalFilters`: Create filters for ranking purposes, where records that match the filter are ranked higher, or lower in the case of a negative optional filter.
+
+- `--reRankingApplyFilter`: When Dynamic Re-Ranking is enabled, only records that match these filters will be impacted by Dynamic Re-Ranking.
+
+- `--sumOrFiltersScores`: Determines how to calculate the total score for filtering.
+
+- `--tagFilters`: Filter hits by tags.
+
+### Languages
+
+- `--decompoundQuery`: Splits compound words into their composing atoms in the query.
+
+- `--ignorePlurals`: Treats singular, plurals, and other forms of declensions as matching terms.  
+  ignorePlurals is used in conjunction with the queryLanguages setting.  
+  list: language ISO codes for which ignoring plurals should be enabled. This list will override any values that you may have set in queryLanguages. true: enables the ignore plurals functionality, where singulars and plurals are considered equivalent (foot = feet). The languages supported here are either every language (this is the default, see list of languages below), or those set by queryLanguages. false: disables ignore plurals, where singulars and plurals are not considered the same for matching purposes (foot will not find feet).  
+  
+- `--keepDiacriticsOnCharacters`: List of characters that the engine shouldn't automatically normalize.
+
+- `--naturalLanguages`: This parameter changes the default values of certain parameters and settings that work best for a natural language query, such as ignorePlurals, removeStopWords, removeWordsIfNoResults, analyticsTags and ruleContexts. These parameters and settings work well together when the query is formatted in natural language instead of keywords, for example when your user performs a voice search.
+
+- `--queryLanguages`: Sets the languages to be used by language-specific settings and functionalities such as ignorePlurals, removeStopWords, and CJK word-detection.
+
+- `--removeStopWords`: Removes stop (common) words from the query before executing it.  
+  removeStopWords is used in conjunction with the queryLanguages setting.  
+  list: language ISO codes for which ignoring plurals should be enabled. This list will override any values that you may have set in queryLanguages. true: enables the stop word functionality, ensuring that stop words are removed from consideration in a search. The languages supported here are either every language, or those set by queryLanguages. false: disables stop word functionality, allowing stop words to be taken into account in a search.  
+  
+### Other flags
+
+- `--attributeForDistinct`: Name of the de-duplication attribute to be used with the distinct feature.
+
+### Output formatting flags
+
+- `--allow-missing-template-keys`: If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.
+
+- `-o`, `--output`: Output format. One of: (json, jsonpath, jsonpath-as-json, jsonpath-file).
+
+- `--template`: Template string or path to template file to use when --output=jsonpath, --output=jsonpath-file.
+
+### Geo-Search
+
+- `--aroundLatLng`: Search for entries around a central geolocation, enabling a geo search within a circular area.
+
+- `--aroundLatLngViaIP`: Search for entries around a given location automatically computed from the requester's IP address.
+
+- `--aroundPrecision`: Precision of geo search (in meters), to add grouping by geo location to the ranking formula.
+
+- `--aroundRadius`: Define the maximum radius for a geo search (in meters).
+
+- `--insideBoundingBox`: Search inside a rectangular area (in geo coordinates).
+
+- `--insidePolygon`: Search inside a polygon (in geo coordinates).
+
+- `--minimumAroundRadius`: Minimum radius (in meters) used for a geo search when aroundRadius is not set.
+
+### Highlighting and Snippeting
+
+- `--attributesToHighlight`: List of attributes to highlight.
+
+- `--attributesToSnippet`: List of attributes to snippet, with an optional maximum number of words to snippet.
+
+- `--highlightPostTag`: The HTML string to insert after the highlighted parts in all highlight and snippet results.
+
+- `--highlightPreTag`: The HTML string to insert before the highlighted parts in all highlight and snippet results.
+
+- `--replaceSynonymsInHighlight`: Whether to highlight and snippet the original word that matches the synonym or the synonym itself.
+
+- `--restrictHighlightAndSnippetArrays`: Restrict highlighting and snippeting to items that matched the query.
+
+- `--snippetEllipsisText`: String used as an ellipsis indicator when a snippet is truncated.
+
+### Query strategy
+
+- `--advancedSyntax`: Enables the advanced query syntax.
+
+- `--advancedSyntaxFeatures`: Allows you to specify which advanced syntax features are active when ‘advancedSyntax' is enabled.
+
+- `--alternativesAsExact`: List of alternatives that should be considered an exact match by the exact ranking criterion.
+
+- `--disableExactOnAttributes`: List of attributes on which you want to disable the exact ranking criterion.
+
+- `--exactOnSingleWordQuery`: Controls how the exact ranking criterion is computed when the query contains only one word. One of: (attribute, none, word).
+
+- `--optionalWords`: A list of words that should be considered as optional when found in the query.
+
+- `--queryType`: Controls if and how query words are interpreted as prefixes. One of: (prefixLast, prefixAll, prefixNone).
+
+- `--removeWordsIfNoResults`: Selects a strategy to remove words from the query when it doesn't match any hits. One of: (none, lastWords, firstWords, allOptional).
+
+### Analytics
+
+- `--analytics`: Whether the current query will be taken into account in the Analytics.
+
+- `--analyticsTags`: List of tags to apply to the query for analytics purposes.
+
+- `--clickAnalytics`: Enable the Click Analytics feature.
+
+### Search
+
+- `--query`: The text to search in the index.
+
+- `--similarQuery`: Overrides the query parameter and performs a more generic search that can be used to find "similar" results.
+
+## algolia objects delete
+
+Delete objects from an index
+
+### Usage
+
+`algolia objects delete <index> [--object-ids <object-ids> | --filters  <filters>...] [--confirm] [--wait] [flags]`
+
+### Examples
+
+Delete one single object with the ID "1" from the "MOVIES" index
+
+```sh
+algolia objects delete MOVIES --object-ids 1
+```
+
+Delete multiple objects with the IDs "1" and "2" from the "MOVIES" index
+
+```sh
+algolia objects delete MOVIES --object-ids 1,2
+```
+
+Delete all objects matching the filters "genres:Drama" from the "MOVIES" index
+
+```sh
+algolia objects delete MOVIES --filters "genres:Drama" --confirm
+```
+
+### Other flags
+
+- `-y`, `--confirm`: skip confirmation prompt
+
+- `--object-ids`: Object IDs to delete
+
+- `--wait`: wait for all the operations to complete before returning
+
+### Filtering
+
+- `--facetFilters`: Filter hits by facet value.
+
+- `--filters`: Filter the query with numeric, facet and/or tag filters.
+
+- `--numericFilters`: Filter on numeric attributes.
+
+- `--tagFilters`: Filter hits by tags.
+
+### Geo-Search
+
+- `--aroundLatLng`: Search for entries around a central geolocation, enabling a geo search within a circular area.
+
+- `--aroundRadius`: Define the maximum radius for a geo search (in meters).
+
+- `--insideBoundingBox`: Search inside a rectangular area (in geo coordinates).
+
+- `--insidePolygon`: Search inside a polygon (in geo coordinates).
+
+## algolia objects import
+
+Import objects to the specified index
+
+### Usage
+
+`algolia objects import <index> -F <file> [flags]`
+
+### Examples
+
+Import objects from the "movies.ndjson" file to the "MOVIES" index
+
+```sh
+algolia objects import MOVIES -F movies.ndjson
+```
+
+Import objects from the standard input to the "MOVIES" index
+
+```sh
+cat movies.ndjson | algolia objects import MOVIES -F -
+```
+
+Browse the objects in the "MOVIES" index and import them to the "MOVIES_staging" index
+
+```sh
+algolia objects browse MOVIES | algolia objects import MOVIES_staging -F -
+```
+
+### Flags
+
+- `--auto-generate-object-id-if-not-exist`: Automatically generate object ID if not exist
+
+- `-b`, `--batch-size`: Specify the upload batch size
+
+- `-F`, `--file`: Read records to import from `file` (use "-" to read from standard input)
+
+## algolia objects operations
+
+Perform several indexing operations
+
+### Usage
+
+`algolia objects operations -F <file> [--wait] [--continue-on-errors] [flags]`
+
+### Examples
+
+Batch operations from the "operations.ndjson" file
+
+```sh
+algolia objects operations -F operations.ndjson
+```
+
+### Flags
+
+- `-C`, `--continue-on-error`: Continue processing operations even if some operations are invalid.
+
+- `-F`, `--file`: The file to read the indexing operations from (use "-" to read from standard input)
+
+- `-w`, `--wait`: Wait for the indexing operation(s) to complete before returning.
+
+## algolia objects update
+
+Update objects from a file to the specified index
+
+### Usage
+
+`algolia objects update <index> -F <file> [--create-if-not-exists] [--wait] [--continue-on-errors] [flags]`
+
+### Examples
+
+Update objects from the "movies.ndjson" file to the "MOVIES" index
+
+```sh
+algolia objects update TEST_PRODUCTS -F objects.ndjson
+```
+
+Update objects from the "movies.ndjson" file to the "MOVIES" index and create the objects if they don't exist
+
+```sh
+algolia objects update MOVIES -F movies.ndjson --create-if-not-exists
+```
+
+Update objects from the "objects.ndjson" file to the "MOVIES" index and wait for the operation to complete
+
+```sh
+algolia objects update MOVIES -F movies.ndjson --wait
+```
+
+Update objects from the "objects.ndjson" file to the "MOVIES" index and continue updating objects even if some objects are invalid
+
+```sh
+algolia objects update MOVIES -F movies.ndjson --continue-on-errors
+```
+
+### Flags
+
+- `-C`, `--continue-on-error`: Continue updating objects even if some objects are invalid.
+
+- `-c`, `--create-if-not-exists`: If provided, updating a nonexistent object will create a new object with the objectID and the attributes defined in the object
+
+- `-F`, `--file`: Read objects to update from `file` (use "-" to read from standard input)
+
+- `-w`, `--wait`: Wait for the operation to complete before returning
+

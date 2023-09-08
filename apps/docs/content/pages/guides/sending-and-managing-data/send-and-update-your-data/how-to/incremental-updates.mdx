@@ -1,0 +1,83 @@
+---
+navigation: "default"
+
+title: |-
+  Incremental updates
+description: |-
+  How to keep your data in sync with Algolia.
+slug: guides/sending-and-managing-data/send-and-update-your-data/how-to/incremental-updates
+---
+
+
+Once you've first indexed your data, **you need to keep your index up to date as the data changes**.
+
+One way of doing so is via incremental updates, by tracking changes and forwarding them to Algolia. Whenever you add, edit, or delete data from your source, you want to update the corresponding records so they reflect the latest state of your data.
+
+## Tracking each record with a unique identifier
+
+To perform incremental updates, you need to declare a unique identifier for each record so you can track what data matches what record. This identifier should map to a "key" you store on your side. For instance, if you're selling books and you have one Algolia record per book, you could use the ISBN.
+
+You need to store the unique identifier in the `objectID` attribute so you can leverage it to perform updates or deletions.
+
+## Adding records
+
+Whenever you add new data in your data source, you can add them to Algolia with a regular call to [`saveObjects`](/api-reference/api-methods/saveObjects).
+
+
+
+<Callout type="info">
+  Note that every record has a custom `objectID`.
+</Callout>
+
+## Updating records
+
+There are two ways to incrementally update records in Algolia:
+
+- **Fully replacing the old record** with a new one
+- **Updating only a subset of the existing record** with the changed data
+
+### Replacing the old record
+
+When saving a record in Algolia, if a record with the specified `objectID` already exists in the index, the engine replaces it. You can replace an existing record by using the  method and specifying the `objectID`. This technique is useful when you're updating data in a single place in your system, or when you don't know what changed.
+
+
+
+<Callout type="info">
+  Note that every record contains the `objectID` and you can use it to find the record that you want to update.
+</Callout>
+
+### Updating a subset of the record
+
+Sometimes, you may want to update a subset of the attributes of a record and leave the rest untouched. This is useful when you update data in multiple places. With the books example, you may have two different systems to handle metadata and to manage stock, both updating the index, with no knowledge about the rest of the data.
+
+For this, you can use the [`partialUpdateObjects`](/api-reference/api-methods/partialUpdateObjects) method and only pass the changed data. Anything you don't specify remains untouched.
+
+
+
+<Callout type="info">
+  Every record has a unique `objectID`. You can use it to find the record that you want to update.
+</Callout>
+
+## Deleting records
+
+Whenever you delete data in your data source, you can delete the corresponding record from Algolia with [`deleteObjects`](/api-reference/api-methods/deleteObjects).
+
+
+
+<Callout type="info">
+  Every record has a unique `objectID`. You can use it to find the record that you want to delete.
+</Callout>
+
+### Delete by query
+
+Sometimes, you may need to delete all records matching a certain filter. Back to the book example, if you stop selling books from a specific publisher, you might want to delete all records matching this `publisher` in your index. To do this, you can use the [`deleteBy`](/api-reference/api-methods/deleteBy) method.
+
+<Callout type="info">
+  The [`deleteBy`](/api-reference/api-methods/deleteBy) method is an expensive operation for the engine. For better performance, use the [`deleteObjects`](/api-reference/api-methods/deleteObjects) method instead.
+</Callout>
+
+
+
+<Callout type="info">
+  Any attribute you're using to delete by needs to be in your [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes).
+</Callout>

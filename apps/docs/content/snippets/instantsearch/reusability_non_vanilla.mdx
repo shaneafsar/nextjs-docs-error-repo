@@ -1,0 +1,34 @@
+### Forwarding root props
+
+  A good first step is to let users forward props to the root element. This is useful for basic styling, accessibility, and testing.
+
+  ```jsx title="JavaScript"
+    export function NegativeRefinementList({ attribute, ...props }) {
+      // …
+
+      return (
+    +   <div {...props} className={{/* … */}}>
+          {/* … */}
+        </div>
+      );
+    }
+    ```
+
+    ```tsx title="TypeScript"
+    export type NegativeRefinementListProps =
+    + React.ComponentProps<'div'> &
+      NegativeRefinementListParams;
+
+    export function NegativeRefinementList({
+      attribute,
+      ...props
+    }: NegativeRefinementListProps) {
+      // …
+
+      return (
+    +   <div {...props} className={{/* … */}}>
+          {/* … */}
+        </div>
+      );
+    }
+    ```

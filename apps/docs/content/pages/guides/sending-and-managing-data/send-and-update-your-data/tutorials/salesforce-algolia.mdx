@@ -1,0 +1,252 @@
+---
+navigation: "default"
+
+title: |-
+  Search Salesforce data
+description: |-
+  Import & sync data between Salesforce & Algolia and build search on top of your Salesforce instance.
+slug: guides/sending-and-managing-data/send-and-update-your-data/tutorials/salesforce-algolia
+---
+
+
+
+
+## Introduction
+
+Integrating Algolia with your Salesforce instance can have a significant impact on your organization's productivity and efficiency.
+In this tutorial, you will learn how to import and synchronize your Salesforce objects in Algolia, using Node.js.
+
+
+## Prerequisites
+
+### Familiar with Node.js
+
+This tutorial assumes you are familiar with Node.js, how it works, and how to create and run Node.js scripts. If you want to learn more before going further, we recommend you read the following resources:
+
+- [Node.js Getting Started Guide](https://nodejs.org/en/docs/guides/getting-started-guide/)
+- [Node.js Docs](https://nodejs.org/en/docs/)
+
+Also, you need to [install Node.js](https://nodejs.org/en/) in your environment.
+
+### Have a Salesforce instance and Algolia account
+
+For this tutorial, we assume that you:
+
+- already have a Salesforce instance, and you want to index your *Account* object,
+- already created an [Algolia account](https://dashboard.algolia.com/dashboard). If not, you can [create an account](https://dashboard.algolia.com/users/sign_up).
+
+## Install dependencies
+
+[JSForce](https://jsforce.github.io/) is a Node.js wrapper for the Salesforce API. It simplifies communication with your instance and has [straightforward documentation](https://jsforce.github.io/document/#query) with lots of examples.
+
+You also need to connect to your Algolia account. For that, you can use our Algolia Search library. Finally, we'll also install Moment.js to simplify date manipulation.
+
+Let's add these dependencies to your project by running the following command in your terminal:
+
+```sh
+npm install jsforce algoliasearch moment
+```
+
+## Connect to your Salesforce instance
+
+To connect to Salesforce with JSForce, you need:
+
+- the login URL of your instance
+- a user login and password
+- the [security token](https://help.salesforce.com/articleView?id=user_security_token.htm) of your instance
+
+<Callout type="warning">
+  **Be careful if you reset your security token**. It will invalidate the connection with all third-party Salesforce packages that use it.
+</Callout>
+
+```js
+const getSfConnection = (loginUrl, userLogin, password, securityToken = '') => {
+  const connection = new jsforce.Connection({ loginUrl });
+
+  return new Promise((resolve, reject) => {
+    connection.login(userLogin, password + securityToken, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(connection);
+      }
+    });
+  });
+};
+```
+
+## Importing your data into Algolia
+
+Next, we want to fetch Salesforce objects and its fields and index them into Algolia. We want to be able to update and delete them later on selectively, so we need to specify an `objectID` for each object.
+
+```js
+const editObject = (record, objectType) => Object.assign({}, record, { objectID: `${objectType}_${record.Id}` });
+
+const pushToAlgolia = (index, sfConnection, objectType, fields) => sfConnection
+  .sobject(objectType)
+  .find({}, fields)
+  .execute({
+    maxFetch: 10000,
+    autoFetch: true
+  })
+  .then(records => {
+    return index.saveObjects(
+      records.map(record => editObject(record, objectType))
+    );
+  });
+```
+
+## Keep Algolia in sync with Salesforce
+
+We now need to synchronize anything we update or delete in Salesforce, in Algolia.
+
+```js
+const syncUpdated = (index, sfConnection, objectType, fields, from) => sfConnection
+  .sobject(objectType)
+  .find(
+    {
+      LastModifiedDate: {
+        $gte: jsforce.Date.toDateTimeLiteral(from)
+      }
+    },
+    fields
+  )
+  .execute({
+    autoFetch: true,
+    maxFetch: 10000
+  })
+  .then(records => {
+    if (records.length > 0) {
+      index.saveObjects(
+        records.map(record => editObject(record, objectType))
+      );
+    }
+  })
+  .catch(err => err);
+
+const syncDeleted = (index, sfConnection, objectType, from, to) => sfConnection
+  .sobject(objectType)
+  .deleted(from, to)
+  .then(records => {
+    return index.deleteObjects(
+      res.deletedRecords.map(({Id}) => `${objectType}_${Id}`)
+    );
+  });
+```
+
+## Putting it all together
+
+At this point, we have four functions:
+
+- one to connect to your Salesforce instance,
+- one to fetch objects from Salesforce and index them in Algolia,
+- one to update your Algolia records from your Salesforce updates,
+- one to remove deleted Salesforce objects from your Algolia index.
+
+From there, we can now create our scripts.
+
+### First import of all data
+
+First, we run a command that connects to Salesforce, fetches the data and indices it into Algolia. **This is a one-off script**: you won't need to rerun it unless you need to start over.
+
+```js
+const jsforce = require('jsforce');
+const algoliasearch = require('algoliasearch');
+const index = algoliasearch('YourApplicationID', 'YourWriteAPIKey')
+  .initIndex('YourIndexName');
+
+getSfConnection(
+  'YourLoginUrl',
+  'YourUserLogin',
+  'YourPassword',
+  'YourSecurityToken'
+).then(connection => {
+  pushToAlgolia(index, connection, 'Account', 'Id, Name, LastModifiedTime');
+});
+```
+
+### Synchronization script
+
+We're done importing data; now we need to keep it fresh. We want to check Salesforce every 5 minutes and synchronize it with Algolia.
+
+```js
+const jsforce = require('jsforce');
+const algoliasearch = require('algoliasearch');
+const index = algoliasearch('YourApplicationID', 'YourWriteAPIKey')
+  .initIndex('YourIndexName');
+
+const from = moment()
+  .add(-5, 'minute')
+  .format();
+
+getSfConnection(
+  'YourLoginUrl',
+  'YourUserLogin',
+  'YourPassword',
+  'YourSecurityToken'
+).then(connection => {
+  syncUpdated(connection, objectType, fields, from);
+  syncDeleted(connection, objectType, from, moment().format());
+});
+```
+
+There are many solutions to manage these 5-minute job runs. You can use pure JavaScript `setTimeout`, [Heroku Scheduler](https://devcenter.heroku.com/articles/scheduler), cron jobs, etc.
+
+You need to make sure that each job is done before starting the next one. If two jobs are running concurrently on the same Salesforce object, this might create conflicts. You can avoid this by implementing a lock strategy while a job is running.
+
+<Callout type="info">
+  The synchronization script above can be time intensive on large Salesforce instances. In this case, we recommend you optimize the script to parallelize synchronization of different objects.
+</Callout>
+
+## Improving relevance
+
+Now that your data is indexed in Algolia, we can improve search relevance by setting a few options on the index. The simplest way to do it is via your [Algolia dashboard](https://dashboard.algolia.com/dashboard/).
+
+### Configure your searchable attributes
+
+Once you've selected your index, go to the **Ranking** tab and select the attributes you want to search in in the **Searchable Attributes** list.
+For instance, in the case of an *Account*, your users are likely to search the `Name` attribute.
+
+### Configure your custom ranking
+
+We can add business metrics to ensure that the most relevant records appear first in the results.
+
+You can do this by adding custom ranking attributes. For instance, you might want to sort your relevant results by `LastModifiedDate`. In this case, the accounts that were last modified would show up first.
+
+<Callout type="info">
+  Keep in mind that these choices are up to what you think is relevant for your end users. Do what makes sense for your use case.
+</Callout>
+
+## Limitations
+
+### Object size
+
+If you've added Salesforce packages to your instance, objects might have custom fields that we don't need here. For example, if you use [Cloudingo](https://cloudingo.com/), you might have custom fields starting with `CloudingoAgent__`.
+
+You can adapt the `editObject` function to exclude them:
+
+```js
+const editObject = (record, objectType) => {
+  const obj = Object.assign({}, record);
+  obj.objectID = `${objectType}_${record.Id}`;
+  for (const prop in record) {
+    // exclude all fields starting with CloudingoAgent__
+    if (!prop.match(/^CloudingoAgent__[a-zA-Z0-9]*/g)) {
+      obj[prop] = record[prop];
+    }
+  }
+  return obj;
+};
+```
+
+Excluding custom fields lets you control the size of the objects you push to Algolia.
+
+### Salesforce API rate limit
+
+The Salesforce API is [rate limited](https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm). Be aware of your current limitation and don't exceed it; otherwise some operations will fail.
+
+## Conclusion
+
+You're done synchronizing Salesforce with Algolia! Now, time to focus on the fun part: **building the user interface**.
+
+We recommend you use [InstantSearch](/guides/building-search-ui/what-is-instantsearch/js/), our open-source library that lets you build a search page in no time.

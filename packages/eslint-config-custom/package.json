@@ -1,0 +1,22 @@
+{
+  "name": "eslint-config-custom",
+  "version": "0.0.0",
+  "files": [
+    "index.js",
+    "next.js"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.43.0",
+    "eslint-config-next": "^13.4.7",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "7.33.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,39 @@
+---
+navigation: "default"
+
+title: |-
+  Data sanitization
+description: |-
+  Learn about data sanitization and how to handle data that Algolia returns.
+slug: guides/sending-and-managing-data/prepare-your-data/in-depth/data-sanitization
+---
+
+
+**Algolia accepts all data, without any alteration.** Same goes with the response, Algolia returns all data in your index as is. For example, it includes HTML tags, along with their properties.
+
+However, **Algolia's search algorithm ignores HTML tags**. Users can't search tag content.
+
+For example, Algolia can save a record that contains the HTML tag `<strong>`.
+
+```json
+{
+  "description": "She is amazingly <strong>powerful</strong>, deeply visionary."
+}
+```
+
+Yet, because the engine strips tags during search, searching for the word "strong" wouldn't return this record.
+
+Some characters are systematically removed, not escaped, from the APIs response:
+
+- [Control characters](https://en.wikipedia.org/wiki/Control_character) (U+0000 to U+001F)
+- [Delete](https://en.wikipedia.org/wiki/Delete_character) (U+007F)
+
+## Cleaning your indices
+
+Since Algolia doesn't sanitize your data and returns it as is, **you need to manage sanitization yourself**. Otherwise, you run the risk of an [cross-site scripting (XSS) attack](https://en.wikipedia.org/wiki/Cross-site_scripting).
+
+To avoid it, you have two options for escaping or stripping dangerous characters: **doing it before indexing, or when displaying results**.
+
+## Cleaning your users' search input
+
+It's also essential for you to sanitize what users type in the search input. Any HTML or code they may enter in the search bar exposes you to an XSS attack because Algolia sends the query back in the API response. **You should escape or strip tags and code before displaying them.**

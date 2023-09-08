@@ -1,0 +1,140 @@
+---
+navigation: "default"
+
+title: |-
+  Linking Adobe Analytics
+description: |-
+  Link Adobe Analytics to Algolia's Crawler.
+slug: tools/crawler/guides/enriching-extraction-with-external-data/how-to/linking-adobe-analytics
+---
+
+
+You can use your website's Adobe Analytics data to enrich the Algolia records extracted from your site. This means you can boost search results based on their popularity (or another metric tracked by Adobe Analytics), you can improve the relevance of your website's search.
+
+With a little bit of configuration, your crawler can automatically fetch Adobe Analytics metrics.
+
+Here's a brief overview of the required steps:
+
+1. Add developers and enable the correct permissions in [Adobe Admin Console](#add-developers-to-your-product-profile).
+2. Generate a **service account** on [Adobe Developer Console](#create-a-service-account).
+3. [Set up the analytics data](#push-page-urls-into-an-evar)
+4. Create a new external data source in the [Crawler Admin Console](#link-the-crawler-to-your-adobe-analytics-account).
+5. Edit your crawler's `recordExtractor` so that it integrates the metrics retrieved from Adobe Analytics into the output records.
+
+
+## Set up Adobe Analytics access
+
+### Get your company ID and report suite ID
+
+
+To access your Adobe Analytics data, the crawler needs your company ID and a report suite to get data from.
+
+**To get your company ID:**
+
+1. Go to your Adobe Analytics interface
+2. Navigate to **Admin > All Admin > Company settings home > API Access**. Your company ID is in the first paragraph.
+
+**To create a report suite:**
+Refer to [Adobe's documentation](https://experienceleague.adobe.com/docs/analytics/admin/manage-report-suites/new-report-suite/t-create-a-report-suite.html). You can find your report suite ID in **Admin > Report suites**.
+
+### Add developers to your product profile
+
+To set up the connection between the Algolia crawler and Adobe Analytics, you need developer permissions.
+
+1. Go to [Adobe Admin Console](https://adminconsole.adobe.com/) and select **Adobe Analytics** in the Products list.
+2. Select or create a Product Profile and click the **Developers** tab.
+3. Click **Add Developer**.
+
+  <Media type="image" id="tools/crawler/guides/external-data/adobe-admin-console.png" alt="" />
+
+<Callout type="info">
+  For more information about developer management, read [Adobe's documentation](https://helpx.adobe.com/enterprise/admin-guide.html/enterprise/using/manage-developers.ug.html).
+</Callout>
+
+### Grant permissions for the report suite
+
+Still in you Product Profile of the Adobe Admin Console:
+
+1. Go to the **Permissions** tab.
+2. Click **Report Suites** and add your report suite to the **Included Permission Items**.
+3. Do the same for the Metrics and Dimensions you want to use with the crawler.
+
+  <Media type="image" id="tools/crawler/guides/external-data/adobe-profile-permissions.png" alt="" />
+
+### Create a service account
+
+1. Go to [Adobe Developer Console](https://developer.adobe.com/console/home) and login with [the developer account added before](#add-developers-to-your-product-profile).
+2. In the Projects tab, click on **Create new project** or use an existing one.
+3. In the project, click on **+ Add to Project > API**, select the Adobe Analytics API and click **Next**.
+
+4. When asked for the type of authentication, select **Service Account (JWT)**. Complete setup by generating a key-pair or importing your own. If you choose to generate a key-pair, don't forget to save the private key as you will need it later.
+
+
+You now have a *Service Account (JWT)* section in the project with the needed credentials.
+
+  <Media type="image" id="tools/crawler/guides/external-data/adobe-dev-console.png" alt="" />
+
+### Push page URLs into an eVar
+
+To map analytics data to each visited URL, the crawler groups the data using [Adobe's `Page` dimension](https://experienceleague.adobe.com/docs/analytics/components/dimensions/page.html). By default this dimension collects data from the `pageName` variable, and fallback to the `pageURL` variable (The [`pageURL`](https://experienceleague.adobe.com/docs/analytics/implementation/vars/page-vars/pageurl.html) dimension isn't available in Adobe Analysis Workspace).
+
+If your pages are named, to ensure that page URLs can be populated reliably, you must create an eVar and push the page URLs into it:
+
+- [Enable a new eVar](https://experienceleague.adobe.com/docs/analytics/admin/admin-tools/conversion-variables/t-conversion-variables-admin.html)
+  <Media type="image" id="tools/crawler/guides/external-data/adobe-create-evar.png" alt="" />
+- [Use a processing rule](https://experienceleague.adobe.com/docs/analytics/admin/admin-tools/processing-rules/processing-rules-configuration/t-processing-rules.html) to copy the page URL into the eVar
+  <Media type="image" id="tools/crawler/guides/external-data/adobe-create-processing-rule.png" alt="" />
+
+## Link the crawler to your Adobe Analytics account
+
+### Add a new External Data source
+
+1. Go to the **External Data** tab of the Crawler Admin Console home page
+2. Click on **+ New External Data Source**
+3. Select the Algolia App for which the data will be available, and give it a unique ID
+4. Select `Adobe Analytics` as the external data type
+5. Fill all the fields:
+
+- **General information**: your company ID and report suite ID
+- **Service Account credentials**: this section expects the credentials obtained when you [created your service account](#create-a-service-account)
+- **Reports data**: in this section, you must select one or more metrics, and the dimension that stores your page URLs (example: `variables/evar15`)
+
+
+### Add the data source in your crawler configuration
+
+In this step, edit the configuration of your crawler to use the External Data you just created.
+
+1. Open one of your crawlers and click on the **Editor** tab.
+2. Add the unique name of the External Data to your `externalData` property:
+
+- `externalData: ['myAdobeAnalyticsData']`
+
+3. Save your changes.
+
+After saving your crawler's configuration, your Adobe Analytics metrics will be ready whenever you crawl your website. If an error occurs while fetching your analytics, it should be reported in less than one minute after the crawling process starts.
+
+## Integrate analytics into records
+
+In this step, you edit your `recordExtractor` so that it integrates metrics from Adobe Analytics into the records it produces.
+
+1. Go to your [Crawler Admin](https://crawler.algolia.com/), select your crawler, and go to the **Editor** tab.
+2. Read metric values from the external data source added before, and store them as attributes for your resulting record(s). If the current page has data in Adobe Analytics, the associated metrics are present in the [`actions#dataSources`](/tools/crawler/apis/configuration/actions#dataSources) parameter of your [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor):
+
+   ```js
+   recordExtractor: ({ url, dataSources }) => {
+     // 'myAdobeAnalyticsData' must match one of the unique name defined in 'externalData'
+     const pageviews = dataSources.myAdobeAnalyticsData['metrics/pageviews'];
+     return [
+       {
+         objectID: url.href,
+         pageviews,
+       },
+     ];
+   },
+   ```
+
+3. In the **Test a URL** field of the configuration editor, type the URL of one of your pages that has analytics attached to it.
+4. Click on **Run test**.
+5. When the test completes, click the **External data** tab. You should see the analytics data extracted from Adobe Analytics for that page.
+
+If this doesn't work as expected, try adding a trailing `/` to your URL, or test with another URL.

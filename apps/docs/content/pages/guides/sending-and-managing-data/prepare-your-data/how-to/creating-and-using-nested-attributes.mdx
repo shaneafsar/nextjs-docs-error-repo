@@ -1,0 +1,38 @@
+---
+navigation: "default"
+
+title: |-
+  Creating and using nested attributes
+description: |-
+  Learn about nested attributes, and when to use them.
+slug: guides/sending-and-managing-data/prepare-your-data/how-to/creating-and-using-nested-attributes
+---
+
+
+## What are nested attributes? 
+
+Nested attributes are a way of applying sub-categories to your attributes. For instance, instead of having a single searchable attribute `price`, you may set up some sub-categories: `price.net`, `price.gross`, `price.margin` (note the use of 'dot notation' here to separate the parent attribute from its child).
+
+## How to create nested attributes 
+
+You can create nested attributes by adding a JSON object to your records when you [send your records to Algolia](/guides/sending-and-managing-data/prepare-your-data). For example:
+
+```json
+{
+  "title": "Bread",
+  "price": {
+    "net": 1.99,
+    "gross": 1.75
+  }
+}
+```
+
+## Where you can use nested attributes
+
+You can use nested attributes wherever you might use a regular attribute, such as [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes/#usage-notes) and [`attributesForFaceting`](/api-reference/api-parameters/attributesForFaceting/#usage-notes). Just make sure you use the appropriate dot notation (for example, `authors.mainAuthor`) to refer to them.
+
+<Callout type="info">
+  You can't add nested attributes to [`searchableAttributes`](/api-reference/api-parameters/searchableAttributes) in the dashboard, you must use the [`setSettings`](/api-reference/api-methods/setSettings) method on an API client to define them.
+</Callout>
+
+There are no limitations on the number of nested attributes apart from [the default restrictions on record size](/guides/sending-and-managing-data/prepare-your-data/in-depth/index-and-records-size-and-usage-limitations/). There are also no limits on the depth of your nesting: you could use something like `price.net.england.yorkshire`.

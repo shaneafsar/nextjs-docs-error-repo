@@ -1,0 +1,152 @@
+import type { Config } from "tailwindcss";
+
+export default {
+  content: [
+    "./components/**/*.{html,js,jsx,md,mdx,ts,tsx}",
+    "./app/**/*.{html,js,jsx,md,mdx,ts,tsx}",
+    "./utils/**/*.{ts,tsx}",
+    "./content/**/*.{md,mdx}",
+  ],
+  darkMode: "class",
+  theme: {
+    fontFamily: {
+      sans: ["ui-sans-serif", "system-ui"],
+      serif: ["ui-serif"],
+      mono: ["JetBrains Mono"],
+      sora: ["var(--font-sora)"],
+    },
+    fontSize: {
+      "2xs": ["0.75rem", { lineHeight: "1.25rem" }],
+      xs: ["0.8125rem", { lineHeight: "1.5rem" }],
+      sm: ["0.875rem", { lineHeight: "1.5rem" }],
+      base: ["1rem", { lineHeight: "1.75rem" }],
+      lg: ["1.125rem", { lineHeight: "1.75rem" }],
+      xl: ["1.25rem", { lineHeight: "1.75rem" }],
+      "2xl": ["1.5rem", { lineHeight: "2rem" }],
+      "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
+      "4xl": ["2.25rem", { lineHeight: "2.5rem" }],
+      "5xl": ["3rem", { lineHeight: "1" }],
+      "6xl": ["3.75rem", { lineHeight: "1" }],
+      "7xl": ["4.5rem", { lineHeight: "1" }],
+      "8xl": ["6rem", { lineHeight: "1" }],
+      "9xl": ["8rem", { lineHeight: "1" }],
+    },
+    typography: require("./typography.cjs"),
+    extend: {
+      colors: {
+        nebula: {
+          100: "#f2f3ff",
+          200: "#cacfff",
+        },
+
+        transparent: "transparent",
+
+        "gray-1000": "#151723",
+        "gray-900": "#23263B",
+        "gray-800": "#36395A",
+        "gray-700": "#484C7A",
+        "gray-600": "#5A5E9A",
+        "gray-500": "#777AAF",
+        "gray-400": "#9698C3",
+        "gray-300": "#B6B7D5",
+        "gray-200": "#D6D6E7",
+        "gray-100": "#F5F5FA",
+        "gray-050": "#FCFCFD",
+
+        "pink-900": "#59063D",
+        "pink-800": "#88085C",
+        "pink-700": "#B80979",
+        "pink-600": "#E90A96",
+        "pink-500": "#F82CAA",
+        "pink-400": "#FB5ABC",
+        "pink-300": "#FD89CE",
+        "pink-200": "#FEB9E2",
+        "pink-100": "#FFEAF6",
+
+        "xenon-1300": "#050914",
+        "xenon-1200": "#0B1535",
+        "xenon-1100": "#0E2058",
+        "xenon-1000": "#0E297E",
+        "xenon-900": "#000033",
+        "xenon-800": "#042077",
+        "xenon-700": "#022EB9",
+        "xenon-600": "#003DFF",
+        "xenon-500": "#1E59FF",
+        "xenon-400": "#457AFF",
+        "xenon-300": "#76A0FF",
+        "xenon-200": "#BBD1FF",
+        "xenon-100": "#F2F4FF",
+
+        "cyan-900": "#00526C",
+        "cyan-800": "#00769B",
+        "cyan-700": "#009BCB",
+        "cyan-600": "#0DB7EB",
+        "cyan-500": "#2CC8F7",
+        "cyan-400": "#5ADAFF",
+        "cyan-300": "#89E5FF",
+        "cyan-200": "#B9EFFF",
+        "cyan-100": "#E8FAFF",
+
+        "green-900": "#005E36",
+        "green-800": "#028950",
+        "green-700": "#06B66C",
+        "green-600": "#0DE589",
+        "green-500": "#5FEB9E",
+        "green-400": "#88F0B3",
+        "green-300": "#AAF4C8",
+        "green-200": "#C9F8DE",
+        "green-100": "#E6FCF3",
+
+        "orange-900": "#963209",
+        "orange-800": "#BF470A",
+        "orange-700": "#E8600A",
+        "orange-600": "#F78125",
+        "orange-500": "#FAA04B",
+        "orange-400": "#FCBC73",
+        "orange-300": "#FED59A",
+        "orange-200": "#FFE9C3",
+        "orange-100": "#FFF9EC",
+
+        "red-900": "#83111E",
+        "red-800": "#AB1325",
+        "red-700": "#D4142A",
+        "red-600": "#EE243C",
+        "red-500": "#F4495D",
+        "red-400": "#F86E7E",
+        "red-300": "#FC95A1",
+        "red-200": "#FEBDC5",
+        "red-100": "#FFE6E9",
+
+        //  Product's colors
+        "color-predict": "#FFA724",
+        "color-recommend": "#FF2A6A",
+
+        // Tonic colors
+        neon: "#ceff00",
+      },
+      boxShadow: {
+        glow: "0 0 171px 4px rgba(30,90,255,0.12)",
+      },
+      maxWidth: {
+        lg: "33rem",
+        "2xl": "40rem",
+        "3xl": "50rem",
+        "5xl": "66rem",
+      },
+      opacity: {
+        1: "0.01",
+        2.5: "0.025",
+        7.5: "0.075",
+        15: "0.15",
+      },
+      gridTemplateColumns: {
+        "auto-full": "auto 1fr",
+      },
+    },
+  },
+  plugins: [require("@tailwindcss/typography")],
+  safelist: [
+    // allow variants for the grid
+    { pattern: /(grid-cols|gap)-./ },
+  ],
+} satisfies Config;

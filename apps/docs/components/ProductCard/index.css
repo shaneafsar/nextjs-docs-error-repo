@@ -1,0 +1,99 @@
+/* Glowing type */
+@property --rotation {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 30deg;
+}
+@keyframes rot {
+  from {
+    --rotation: 30deg;
+  }
+  to {
+    --rotation: 390deg;
+  }
+}
+.product-card-glow {
+  --rotation: 30deg;
+  --rotating-background: conic-gradient(
+    from var(--rotation) at 50% 50%,
+    theme(colors.gray-100),
+    #e2ff66,
+    theme(colors.cyan-700),
+    theme(colors.xenon-700),
+    theme(colors.xenon-400),
+    theme(colors.xenon-700),
+    theme(colors.cyan-700),
+    #e2ff66,
+    theme(colors.gray-100)
+  );
+  transition: border 0.2s ease;
+  position: relative;
+  border: none;
+}
+.product-card-glow:hover {
+  animation: rot 3s linear infinite;
+}
+.product-card-glow:hover .product-card-glow-text-container {
+  animation: rot 3s linear infinite;
+}
+.product-card-glow::before {
+  /* The following lines are used to generate the card glow */
+  border-radius: 0.375rem;
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 101%;
+  height: 101%;
+  z-index: -1;
+  filter: blur(6px);
+  opacity: 0.6;
+  transition: --rotation 0.5s 0.1s;
+  background: var(--rotating-background);
+}
+.product-card-glow::after {
+  border-radius: 0.375rem;
+  content: "";
+  display: block;
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  z-index: -1;
+  background-image: var(--rotating-background);
+}
+.product-card-glow::after:hover,
+.product-card-glow::after:focus {
+  background-color: var(--rotating-background);
+}
+.product-card-glow-text-container {
+  background-image: conic-gradient(
+    from var(--rotation) at 50% -200%,
+    theme(colors.gray-100),
+    #e2ff66,
+    theme(colors.cyan-700),
+    theme(colors.xenon-700),
+    theme(colors.xenon-400),
+    theme(colors.xenon-700),
+    theme(colors.cyan-700),
+    #e2ff66,
+    theme(colors.gray-100)
+  );
+  background-size: 100% 100%;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-position: 0% 0%;
+  animation: 0s ease 0s 1 normal none running none;
+}
+.product-card-glow-text-fill {
+  -webkit-text-fill-color: transparent;
+}
+
+/* Red type */
+.dark .product-card-red:hover,
+.product-card-red:hover {
+  border-color: #ff2a6a;
+}

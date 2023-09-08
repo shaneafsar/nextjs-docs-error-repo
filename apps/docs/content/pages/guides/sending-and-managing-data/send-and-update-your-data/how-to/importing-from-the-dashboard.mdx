@@ -1,0 +1,66 @@
+---
+navigation: "default"
+
+title: |-
+  Importing from the dashboard
+description: |-
+  Learn how to index your data from Algolia's dashboard.
+slug: guides/sending-and-managing-data/send-and-update-your-data/how-to/importing-from-the-dashboard
+---
+
+
+Using the dashboard, you can either import a file or connect Algolia to a file on your servers:
+
+- **File importing** can be helpful when you're just starting with Algolia and want to test it with sample data. However, you can't use the dashboard to update _existing_ data (to synchronize or update such data, use an [API client](/api-client/getting-started/install/php/)).
+- **The no-code connector.**  If you [provide a URL that links to a data file](/guides/sending-and-managing-data/send-and-update-your-data/how-to/importing-with-no-code-connectors/), Algolia will fetch and process that data. The engine will synchronize changes to the file's contents and update its indices accordingly.
+## File importing
+
+Algolia uses [JSON to model records](/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/) and can import JSON, CSV, and TSV files:
+
+```json
+[
+  {
+    "firstname": "Jimmie",
+    "lastname": "Barninger"
+  },
+  {
+    "firstname": "Warren",
+    "lastname": "Speach"
+  }
+]
+```
+
+```csv
+firstname,lastname
+Jimmie,Barninger
+Warren,Speach
+```
+
+```tsv
+"firstname" "lastname"
+"Jimmie"    "Barninger"
+"Warren"    "Speach"
+```
+
+## Creating a new index
+
+To create a new index to import your file data into:
+
+1. Go to the [**Indices** tab](https://dashboard.algolia.com/explorer/browse) in the Algolia dashboard and click **New > Index**.
+  <Media type="image" id="guides/indexing/create-index-from-dashboard.jpg" alt="" />
+1. Give your index a name and click **Create**.
+  <Media type="image" id="guides/indexing/create-index-from-dashboard-2.jpg" alt="" />
+
+## Uploading the file
+
+To add records to a new index, click **Upload records > Upload file** to import your file.
+
+<Media type="image" id="guides/indexing/upload-json-file-to-dashboard.jpg" alt="" />
+
+To add records to an existing index:
+
+1. Click **Add records > Upload file**.
+  <Media type="image" id="guides/indexing/upload-json-file-to-dashboard-2.jpg" alt="" />
+1. Drop the file into the **Upload records** box or select it on your file system. Then, click **Upload**.
+  <Media type="image" id="guides/indexing/drop-file-dashboard.jpg" alt="" />
+1. Once Algolia has indexed your data, the dashboard will notify you of a successful save.

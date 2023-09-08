@@ -1,0 +1,258 @@
+---
+navigation: "crawler"
+
+title: |-
+  Extracting data with Cheerio
+description: |-
+  Learn the Cheerio syntax to extract data in the Algolia Crawler, and discover ready-to-use selectors and extractors.
+slug: tools/crawler/guides/extracting-data/how-to/extraction-examples
+---
+
+
+When implementing your [`actions#recordExtractor`](/tools/crawler/apis/configuration/actions#recordExtractor), the most important parameter is the [Cheerio](https://cheerio.js.org) instance (`$`). Cheerio is a server-side implementation of [jQuery](https://jquery.com/). **The Crawler uses it to expose the page's DOM so you can extract the content you want using Cheerio's [Selectors API](https://cheerio.js.org/#selectors).**
+
+
+Both [jQuery](https://jquery.com/) and [Cheerio](https://cheerio.js.org) provide comprehensive documentation, but nailing the right syntax for your crawling needs can take some trial and error.
+
+
+This guide provides you with the most common extractions strategies you need to build records out of your site's content.
+
+## Common extraction strategies
+
+Here's a non-exhaustive list of common helpers you might find useful to extract content from your pages. Make sure to adapt them to your use case if need be.
+
+### Extract content from metadata elements
+
+To get content from `<meta>` elements, you need to parse their `content` attribute.
+
+```js
+// Get `title` from <meta content="Page title" property="og:title">
+const title = $('meta[property="og:title"]').attr('content');
+
+// Get `description` from <meta content="Page description" name="description">
+const description = $('meta[name=description]').attr('content');
+```
+
+### Extract data from JSON-LD
+
+If your pages expose [JSON-LD](https://json-ld.org/), you can access it like that:
+
+```js
+let jsonld;
+const node = $('script[type="application/ld+json"]').get(0);
+
+try {
+  jsonld = JSON.parse(node.firstChild.data);
+} catch (err) {
+  // In case of error, you can try to debug by logging the node
+  console.log(node);
+}
+```
+
+### Get text from multiple selectors
+
+If you need to get text from multiple selectors, you can query them all and retrieve an array of content.
+
+```js
+const allHeadings = $('h1, h2')
+  .map((i, e) => $(e).text())
+  .get(); // ["First <h1>", "First <h2>", "Second <h2>", "Second <h1>"]
+```
+
+### Build a hierarchy
+
+InstantSearch libraries provide a [`js`](/api-reference/widgets/hierarchical-menu/js) widget to display hierarchical information. This widget expects a special format in your records.
+If your site displays a [breadcrumb](https://wikipedia.org/wiki/Breadcrumb_navigation), you can turn it into a hierarchy in your records.
+
+```html
+<ul class="breadcrumb">
+  <li><a href="/home">Home</a></li>
+  <li><a href="/home/pictures">Pictures</a></li>
+  <li><a href="/home/pictures/summer15">Summer 15</a></li>
+  <li>Italy</li>
+</ul>
+```
+
+```js
+function buildHierarchy(arr) {
+  const hierarchy = {};
+
+  for (let i = 0; i < arr.length; ++i) {
+    res[`lvl${i}`] = arr.slice(0, i + 1).join(' > ');
+  }
+
+  return hierarchy;
+}
+
+const breadcrumb = $('ul.breadcrumb li')
+  .map((i, e) => $(e).text())
+  .get();
+
+const hierarchy = buildHierarchy(breadcrumb); // This is compatible with InstantSearch's hierarchical menu widgets
+```
+
+## Indexing in separate indices based on content
+
+To push records in separate indices, you have to create multiple [`actions`](/tools/crawler/apis/configuration/actions/), each one targeting a separate `indexName`. You can then decide which pages each `action` processes by specifying the `pathsToMatch`.
+
+Yet, sometimes you need to rely on the content of the page to determine which action needs to process it. For example, if you have an index per language, you might want to rely on the `lang` attribute of the `<html>` tag to know in where to index a page.
+
+In the following example, both actions process the same pages, but might either crawl or skip them depending on the `lang` attribute.
+
+```js
+{
+  // ...
+  actions: [
+    {
+      indexName: 'english',
+      pathsToMatch: ['http://example.com/**'],
+      recordExtractor: ({ $, url }) => {
+        if ($('html').attr('lang') !== 'en') {
+          return []; // Skip non-English pages
+        }
+
+        return [
+          {
+            objectID: url.href,
+            content: $('p').text(),
+          },
+        ];
+      },
+    },
+    {
+      indexName: 'french',
+      pathsToMatch: ['http://example.com/**'],
+      recordExtractor: ({ $, url }) => {
+        if ($('html').attr('lang') !== 'fr') {
+          return []; // Skip non-French pages
+        }
+
+        return [
+          {
+            objectID: url.href,
+            content: $('p').text(),
+          },
+        ];
+      },
+    },
+  ];
+}
+```
+
+## Splitting content
+
+You should [split long content into multiple records](/guides/sending-and-managing-data/prepare-your-data/how-to/indexing-long-documents/) for performance and relevance reasons.
+
+
+### PDFs
+
+
+The Crawler transforms PDF documents into HTML using [Apache Tika](https://tika.apache.org/) and exposes it to you via Cheerio. You can use the **HTML** tab of the **URL Tester** to see the extracted HTML.
+
+
+Depending on how the resulting HTML, you should be able to split the content into multiple records.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>
+
+#### Basic PDF splitting
+
+
+The HTML that Tika generates is often mainly composed of `<p>` tags, meaning the `$('p').text()` should return the complete text of your PDF. Yet, PDFs tend to be long, and since Algolia's records size is limited, you should always wrap long text with the [`splitContentIntoRecords`](/tools/crawler/apis/configuration/actions/#parameter-param-splitcontentintorecords) helper.
+Your PDF extractor could look like the following:
+
+```js
+{
+  // ...
+  recordExtractor: ({ url, $, contentLength, fileType, helpers }) => {
+    const records = helpers.splitContentIntoRecords({
+      baseRecord: { url },
+      $elements: $('p'),
+      maxRecordBytes: 10000,
+    });
+
+    return records;
+  },
+}
+```
+
+#### Advanced PDF splitting
+
+Many PDFs generators create PDFs with a minimal structure. It's common to have `<div>` tags to identify the pages.
+For example, [this document](https://www.un.org/sustainabledevelopment/wp-content/uploads/2015/10/COP21-FAQs.pdf) has the following structure when transformed to HTML:
+
+```html
+<body>
+  <div class="page">
+    <p></p>
+    <p></p>
+    ...
+  </div>
+
+</body>
+```
+
+This lets you create one record per page.
+
+You can also combine this with a browser feature to open PDFs documents on a given page: by adding `#page=n` at the end of a URL pointing to a PDF document, the browser opens it on that page.
+
+By generating one record per page with their own URLs, you can redirect users to the page of the document that matched their search, which further improves the search experience.
+Your PDF extraction would look like this:
+
+```js
+{
+  // ...
+  recordExtractor: ({ url, $, contentLength, fileType }) => {
+    const records = $('div.page')
+      .map(function (i, e) {
+        return {
+          url: `${url}#page=${i + 1}`,
+          content: $(e).text().trim(),
+        };
+      })
+      .get();
+
+    return records;
+  },
+};
+```
+
+### Splitting using URI fragments
+
+If you have [URI fragments](https://en.wikipedia.org/wiki/URI_fragment) in your pages, it's a good idea to have your records pointing to them.
+With the following HTML:
+
+```html
+<body>
+  <h1 id="part1">Part 1</h1>
+  <p></p>
+  <p></p>
+
+  <h1 id="part2">Part 2</h1>
+  <p></p>
+
+</body>
+```
+
+You can then create one record per heading, so your users land on the relevant part of the page when they click a search result.
+
+```js
+{
+  // ...
+  recordExtractor: ({ url, $, contentLength, fileType }) => {
+    const records = $('h1')
+      .map(function (i, e) {
+        return {
+          url: `${url}#${$(e).attr('id')}`,
+          content: $(e).nextUntil('h1').text(),
+        };
+      })
+      .get();
+
+    return records;
+  },
+};
+```

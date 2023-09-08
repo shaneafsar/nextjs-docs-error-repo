@@ -1,0 +1,115 @@
+---
+navigation: "crawler"
+
+title: |-
+  Finding and Fixing a Bug with Data Analysis
+description: |-
+  How to use the Data Analysis tool to find a bug and fix it.
+slug: tools/crawler/insights-tools/data-analysis/how-to/finding-fixing-bugs
+---
+
+
+When you have data inconsistencies, it can be difficult to track down what's going on. Data Analysis can help you identify an issue, fix it, and confirm that you solved it.
+
+Imagine that we are building the search for a news website.
+There are two fields we want to extract for ranking: 
+- The publication date of the article, so we can rank them by publish date and have the most recent ones appear first.
+- Whether the article was recently updated, so we can promote articles with fresh information. 
+
+We start by editing our configuration and identify which selector to use so we can extract the publish and modified date:
+
+```js
+new Crawler({
+  ...
+  sitemaps: ["https://my-example-blog.com/sitemap.xml"],
+  actions: [
+    {
+      indexName: "blog",
+      pathsToMatch: ["https://my-example-blog.com/*"],
+      recordExtractor: function({ url, $ }) {
+        const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
+        const title = $("h1").text();
+
+        const publishedAt = $('meta[property="article:published_time"]').attr(
+          "content"
+        );
+        const modifiedAt = $('meta[property="article:modified_time"]').attr(
+          "content"
+        );
+
+        let recentlyModified;
+
+        if (publishedAt !== modifiedAt) {
+          recentlyModified = new Date() - new Date(modifiedAt) < SEVEN_DAYS;
+        }
+
+        return [
+          {
+            objectID: url.href,
+            title,
+            publishedAt,
+            modifiedAt,
+            recentlyModified
+          }
+        ];
+      }
+    }
+  ]
+});
+```
+
+From there, we can run our first crawl. Once it's done, we can go to the Data Analysis tab to check for issues. Here, we can find warnings for both the `date` and `subtitle` attributes.
+
+Let's investigate the date issue first:
+
+
+<Media type="image" id="tools/crawler/data-analysis-how-to-recently-modified.png" alt="" />
+
+
+
+We have eleven records with missing data in the `recentlyModified` attribute. This suggests that there's an issue with the code we wrote extract this piece of data. We can click on **View URLs** to investigate the warning further.
+
+
+<Media type="image" id="tools/crawler/data-analysis-how-to-modal.png" alt="" />
+
+
+
+If we click on a couple of links, we can notice that the publish date is always the same as the modified date.
+
+
+<Media type="image" id="tools/crawler/data-analysis-how-to-meta-comparison.png" alt="" />
+
+
+
+We can assume that our issue happens when the two dates are identical. We can click on **Test this URL** to open the Editor with a problematic URL and investigate issues with our code.
+
+```js
+let recentlyModified;
+
+if (publishedAt !== modifiedAt) {
+  recentlyModified = new Date() - new Date(modifiedAt) < SEVEN_DAYS;
+}
+```
+
+It seems that we forgot to set a value for the `recentlyModified` attribute when `publishedAt` is equal to `modifiedAt`. In this situation, we want to set it to `false`, because the article wasn't modified.
+
+We can update the code, and immediately test our changes against the URL problematic URL by clicking **Run Test**.
+
+```js
+let recentlyModified = false; // set default value to `false`
+
+if (publishedAt !== modifiedAt) {
+  recentlyModified = new Date() - new Date(modifiedAt) < SEVEN_DAYS;
+}
+```
+
+
+<Media type="image" id="tools/crawler/data-analysis-how-to-url-tester.png" alt="" />
+
+
+
+Success! The `recentlyModified` attribute is now present even when an article wasn't modified. We can save the configuration and start a new crawl from the Overview page.
+
+Once the crawl is complete, we can run another analysis to validate that our configuration is now correct, in which case it should show no warnings.
+
+In conclusion, through the Data Analysis tool, we can focus on each issue one by one, and quickly iterate over our configuration to resolve them.

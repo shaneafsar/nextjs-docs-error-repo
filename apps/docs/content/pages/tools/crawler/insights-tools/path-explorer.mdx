@@ -1,0 +1,83 @@
+---
+navigation: "crawler"
+
+title: |-
+  Path Explorer
+description: |-
+  Introduction to the Path Explorer, anatomy of a crawler debugging tool.
+slug: tools/crawler/insights-tools/path-explorer
+---
+
+
+Crawler comes with a set of debugging tools. The Path Explorer is one of these tools.
+
+
+
+
+
+You can use Path Explorer to detect patterns and anomalies. At a glance, it shows you whether specific sections of your site were properly crawled, how many URLs were crawled, how many errors happened, how much bandwidth was necessary, etc.
+
+## Path Explorer as a URL directory
+
+With Path Explorer, you can explore your crawled websites as though you were navigating folders on your computer.
+Each website is considered a file, and each sub-path is considered a folder.
+
+For instance, [support.algolia.com](https://support.algolia.com/) and [www.algolia.com](https://www.algolia.com/) could give you this structure:
+
+
+
+
+
+
+
+## Identifying issues
+
+Path Explorer is effective at identifying specific issues. This section presents these issues alongside their usual solutions.
+
+### Identifying ignored websites and paths
+
+**Your [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) parameter is too restrictive**
+
+* Modify your [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) patterns
+* Add a new pattern
+
+**Your website is missing links from the explored pages to the ignored website or path**
+
+* Improve your website by adding links between sections
+
+**Your [`startUrls`](/tools/crawler/apis/configuration/startUrls) parameter is missing a first page to discover this website or path**
+
+* Add the website's sitemap to your [`startUrls`](/tools/crawler/apis/configuration/startUrls)
+* Add this website or path's main URL to your [`startUrls`](/tools/crawler/apis/configuration/startUrls)
+
+### Identifying crawled websites and paths which should be excluded
+
+**Your [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) parameter might be too permissive**
+
+* Make your [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) patterns more specific
+
+**You're missing a pattern in [`exclusionPatterns`](/tools/crawler/apis/configuration/exclusionPatterns)**
+
+* Add the website or path to  [`exclusionPatterns`](/tools/crawler/apis/configuration/exclusionPatterns)
+
+### Identifying websites and paths with numerous errors
+
+Errors are of three types:
+
+1. **Website errors**: Some HTTP codes, wrong Content-Type header, network error, timeout, and so on.
+   * Contact the team responsible for the website and ask them to investigate the recurring errors
+2. **Configuration errors**: Runtime errors, invalid JSON, extraction timeout, etc.
+
+   * Fix your crawler's configuration to prevent these errors
+
+3. **Internal errors**: These indicate the failure of an internal Algolia service
+   * If the issue persists, contact the  team
+
+### Identify websites and paths consuming lots of bandwidth
+
+If you're crawling frequently, bandwidth costs might go up quickly.
+
+* Make sure you're only crawling what's necessary. Note, ignored pages are **also** crawled. If you have a lot of ignored pages, consider setting stricter [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) or adding [`exclusionPatterns`](/tools/crawler/apis/configuration/exclusionPatterns).
+* Decrease your crawl frequency in the [`schedule`](/tools/crawler/apis/configuration/schedule) parameter to proportionally reduce bandwidth costs
+
+If there are specific parts of your website you'd like to crawl more frequently than others, contact the  team.

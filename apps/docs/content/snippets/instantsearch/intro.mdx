@@ -1,0 +1,22 @@
+<Var type="language"/> comes with <Var type="link" link={{url:"/doc/api-reference/widgets/$lang", text: "multiple widgets"}}/> that you can <Var type="link" link={{url:"/doc/guides/building-search-ui/widgets/customize-an-existing-widget/$lang", text: "extensively customize"}}/>, but you can also use connectors to completely change your rendering.
+
+If a widget and its connector don't cover your needs, **you can create your own widget.** Making widgets is the most advanced way of customizing your search experience and it requires a deeper knowledge of InstantSearch and Algolia.
+
+  This guide covers how to build a custom widget :
+
+  - [Building a custom InstantSearch.js connector](#building-a-custom-connector)
+  - [Building a UI with a connector](#rendering-a-custom-user-interface)
+
+  <Callout type="info">
+  You're trying to create your own InstantSearch widget and that's awesome, but it also means that you couldn't find what you were looking for. **InstantSearch aims at offering the best out-of-the-box experience, so we'd love to hear about your use case.**
+
+  Don't hesitate to [open a feature request](https://github.com/algolia/instantsearch/discussions/new?category=ideas&labels=triage&title=Feature%20request%3A%20) explaining what you're trying to achieve.
+  </Callout>
+
+  ## When to create custom widgets
+
+  You can create a new widget **when none of the <Var type="link" link={{url:"/doc/api-reference/widgets/$lang", text: "existing widgets"}}/> fit your functional needs.** However, if you're trying to redefine the UI or DOM output of a widget, <Var type="link" link={{url:"/doc/guides/building-search-ui/widgets/customize-an-existing-widget/$lang/#customize-the-complete-ui-of-the-widgets", text: "you should, instead, _extend_ it by using its connector counterpart"}}/>
+
+  **Existing widgets and connectors should fit most of your use cases** and you should look into them before creating custom connectors. For example, to create buttons that set predefined queries, you could use <Var type="link" link={{url:"/doc/guides/building-search-ui/widgets/search-box/$lang", text: "search_box"}}/> Although you're not rendering a search box, the connector provides the necessary APIs for this, so there's no need to re-develop it.
+
+  **For help, [explain your situation and ask questions on GitHub](https://github.com/algolia/instantsearch/discussions/new?category=q-a&labels=triage).**

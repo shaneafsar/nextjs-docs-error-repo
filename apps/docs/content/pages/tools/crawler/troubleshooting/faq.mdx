@@ -1,0 +1,160 @@
+---
+navigation: "crawler"
+
+title: |-
+  FAQ
+description: |-
+  FAQs about the Crawler, it's implementation and use.
+slug: tools/crawler/troubleshooting/faq
+---
+
+
+
+## Which IP address of the Crawler can I add to my allowlist?
+
+The Algolia Crawler uses this static external IP address: `34.66.202.43`.
+You can add this IP address to your allowlist if necessary.
+
+## What is the user agent of the Crawler?
+
+When fetching pages, the Algolia Crawler identifies itself with the following user agent: `Algolia Crawler/xx.xx.xx`, where `xx.xx.xx` represents a version number.
+
+The version number at the end of the user agent string changes regularly as the product evolves.
+
+You can allow this user agent in your `robots.txt` file: `User-agent: Algolia Crawler` without any version number.
+Allowing user agents manually—for example, through nginx or other custom validations may require changes to let the crawler fetch pages.
+
+Consider [allowing the IP address](#which-ip-address-of-the-crawler-can-i-add-to-my-allowlist) of the Algolia Crawler to your allowlist instead.
+
+## What can I crawl with the Crawler?
+
+The Crawler aims at crawling content that's solely owned by the user, whether it's hosted on its own infrastructure or on a SaaS.
+Algolia automatically restricts the Crawler's scope to a list of allowed domains.
+If you need to add an other domain to your allowed list go the [Domains page and verify your domain](/tools/crawler/getting-started/verify-domain).
+
+## One of my pages was not crawled
+
+The reasons, why one of your pages wasn't crawled, include:
+
+- Crawling a website completely can take hours depending on the size: make sure that the crawling operation has finished.
+- Some pages may not be linked with each other: make sure that there exists a way to navigate from the website's start pages to the missing page, or that the missing page is listed in the [`sitemaps`](/tools/crawler/apis/configuration/sitemaps). If it is inaccessible, you may want to add its URL as a start URL in your crawler's configuration file.
+- The page may have been ignored if it refers to a canonical URL, or if it doesn't match a [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch) in any of your crawler's actions, or if it matches any [`exclusionPatterns`](/tools/crawler/apis/configuration/exclusionPatterns). For more information, checkout the question: [when are pages skipped or ignored?](#when-are-pages-skipped-or-ignored)
+- If the page is rendered using JavaScript, you may need to set [`renderJavaScript`](/tools/crawler/apis/configuration/renderJavaScript) to `true` in your configuration (note: this makes the crawling process slower).
+- If the page is behind a login wall, you may need to setup the [`login`](/tools/crawler/apis/configuration/login) property of your configuration.
+
+If none of these solve your problem, an error may have happened while crawling the page. Please check your logs using the **Monitoring** and **URL Inspector** tabs.
+
+You can also use the URL tester in the **Editor** tab of the Admin to get details on why a URL was skipped / ignored.
+
+## The Crawler doesn't see the same HTML as me
+
+Sometimes, websites behave differently depending on the [user agent](https://en.wikipedia.org/wiki/User_agent) they receive.
+You can see the HTML discovered by the Crawler in the URL Tester.
+
+
+<Media type="image" id="tools/crawler/url-tester-html.png" alt="" />
+
+
+If this HTML is missing information, the last thing to check after trying to [debug your selectors](/tools/crawler/getting-started/crawler-configuration#debugging-selectors) is to check whether it can be due to the Crawler's user agent.
+You can do this with browser extensions or using [curl](https://curl.se/). Send several requests with a few different user agents and compare the results.
+
+```sh
+curl http://example.com
+curl -H "User-Agent: Algolia Crawler" http://example.com
+curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:71.0) Gecko/20100101 Firefox/71.0" http://example.com
+```
+
+<Callout type="info">
+  Sometimes, having a "robot" user agent is actually helpful: when they detect a web crawler, some websites return content that works without JavaScript.
+</Callout>
+
+## How to see the Crawler tab in the Algolia dashboard?
+
+
+
+
+1. Make sure that your crawler configuration file was saved on [crawler.algolia.com](https://crawler.algolia.com/admin/).
+1. Make sure that you have administrator ACL permissions on the indices specified in your crawler's configuration file.
+1. Make sure that your [`appId`](/tools/crawler/apis/configuration/appId) and [`apiKey`](/tools/crawler/apis/configuration/apiKey) are correct and that they grant administrator permissions to the crawler for these indices.
+
+
+
+## When are pages skipped or ignored?
+
+### At addition time
+
+Pages skipped at addition time are not added to the URL database. This can happen for two reasons:
+
+1. The URL doesn't match at least one of your actions' [`actions#pathsToMatch`](/tools/crawler/apis/configuration/actions#pathsToMatch).
+2. The URL matches one of your crawler's [`exclusionPatterns`](/tools/crawler/apis/configuration/exclusionPatterns).
+
+### At retrieval time
+
+Pages skipped at retrieval time are added to the URL database, retrieved, but not processed.
+Those are flagged "Ignored" in the Crawler dashboard. This can happen for these reasons:
+
+1. The `robots.txt` check didn't allow this URL to be crawled.
+1. The URL is a redirect. The crawler adds the redirect target to the URL database but skips the rest of the page.
+1. The page's HTTP status code is **not** 200.
+1. The media type isn't one of the expected ones.
+1. The page contains a canonical link.
+   The crawler adds the canonical target as a page to crawl according to the same addition-time filters and then skip the current page.
+1. The robots meta tag in the HTML is set to `noindex`—for example, `<meta name="robots" content="noindex"/>`.
+
+## When are records deleted?
+
+Launching a crawl completely clears the state of your database. When your crawl completes, your old indices are overwritten by the data indexed during the new run. If you want to save a backup of your old index, set the [`saveBackup`](/tools/crawler/apis/configuration/saveBackup) parameter of your crawler to `true`.
+
+## Crawler has SSL issues but my website works fine
+
+You may encounter SSL-related errors when indexing your website using the Algolia Crawler, even though your website works fine in a web browser.
+That's because web browsers have extra features to handle SSL certificates that the Crawler doesn't provide.
+
+### UNABLE_TO_VERIFY_LEAF_SIGNATURE
+
+This error generally happens when your website's certificate chain is incomplete.
+When an intermediate certificate authority signs your SSL certificate, you need to install this intermediate certificate on your server.
+
+{/* Partial: panel/table.haml */}
+
+#### Verify your certificate chain
+
+To verify the validity of your certificate chain, you can use OpenSSL:
+
+```sh
+openssl s_client -showcerts -connect algolia.com:443 -servername algolia.com
+```
+
+- If the chain is valid, you should see `Verify return code: 0 (ok)` at the end, and no errors in the output.
+- If it's invalid, you should either get:
+  - `Verify return code: 21 (unable to verify the first certificate)` at the end.
+  - Or errors in the verifications steps, such as:
+
+    ```sh
+    CONNECTED(00000005)
+    depth=0 C = FR, L = PARIS, O = Algolia, CN = Algolia.com
+    verify error:num=20:unable to get local issuer certificate
+    verify return:1
+    depth=0 C = FR, L = PARIS, O = Algolia, CN = Algolia.com
+    verify error:num=21:unable to verify the first certificate
+    verify return:1
+    ```
+
+You can also [do the check online](https://whatsmychaincert.com/).
+
+#### Fix your server
+
+The correct way to bundle the intermediate certificates depends on your web server.
+[What's My Chain Cert](https://whatsmychaincert.com#config) explains how to fix the issue for many popular web servers.
+
+## Can I crawl my site with an invalid certificate?
+
+No. The Crawler doesn't support sites with invalid certificates. 
+
+## Does the crawler support RSS?
+
+Yes, the crawler can discover links present in RSS feeds: it parses and extracts all `<link>` tags present in RSS files.
+
+<Callout type="warning">
+  You can't use the content of the RSS file to generate records: the crawler only extract links, for discovery purposes.
+</Callout>

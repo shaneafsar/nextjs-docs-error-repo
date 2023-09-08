@@ -1,0 +1,29 @@
+:root {
+  --auc-primary-color: #9698c3;
+  --auc-muted-color: #c4c4c4;
+  --auc-dark-color: #0f0f0f;
+}
+
+.auc-Recommend-list {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none !important;
+  margin: 0 !important;
+  outline-color: var(--auc-primary-color);
+  outline-offset: 0.5rem;
+  padding: 0 !important;
+}
+
+.auc-Recommend-list {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 999px) {
+  .auc-Recommend-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.auc-Recommend-item {
+  margin: 0 !important;
+}

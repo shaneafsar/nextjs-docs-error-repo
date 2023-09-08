@@ -1,0 +1,21 @@
+#### Targeting a record attribute
+
+  When a widget needs to target a specific record attribute, you should expose an `attribute` option in the connector. This is the case for most refinement widgets like <Var type="link" link={{url:"/ui-libraries/instantsearch/refinements/color-refinement-list/$lang", text: "refinement-list"}}/> so you can select the specific attribute to refine.
+
+  The `attribute` option typically accepts a string. For deeply nested objects, you can accept dot-separated values like `"brand.name"` or an array of strings like `["brand", "name"]`.
+
+  #### Including or excluding attributes
+
+  When a widget manipulates selected refinements, you may want to let users select what attributes to include or exclude. This is the case with widgets like <Var type="link" link={{url:"/ui-libraries/instantsearch/refinements/current-refinements/$lang", text: "current-refinements"}}/> %> or <Var type="link" link={{url:"/ui-libraries/instantsearch/refinements/clear-refinements/$lang", text: "clear-refinement"}}/> so you can hand-pick exactly what attributes to manipulate.
+
+  #### Limiting items
+
+  When a widget manipulates items, notably facet refinements, you may want to let users limit how many of them to retrieve. Widgets like <Var type="link" link={{url:"/ui-libraries/instantsearch/refinements/color-refinement-list/$lang", text: "refinement-list"}}/> or <Var type="link" link={{url:"/ui-libraries/instantsearch/refinements/menu/$lang", text: "menu"}}/> expose a `limit` option, which is directly forwarded to the Algolia search engine with the <Var type="link" link={{url:"/api-reference/api-parameters/$lang", text: "maxValuesPerFacet"}}/> search parameter.
+
+  Such widgets usually expose two extra options to let end users toggle more facets: `showMore`, a boolean option to enable the feature, and `showMoreLimit`, to define the maximum number of items to display if the widget is showing more items.
+
+  #### Transforming items
+
+  When a widget manipulates items like hits or facets, users may want to change them before rendering. To do so, you should expose a `transformItems` option for transforming, removing, or reordering items on the connector.
+
+  The `transformItems` option is a function that receives the items and should return a new array of the same shape. The default value is an identity function.

@@ -1,0 +1,56 @@
+---
+navigation: "default"
+
+title: |-
+  Enriching extraction with external data
+description: |-
+  Enrich your record extractions by adding data from a CSV file, Google Analytics, or Adobe Analytics.
+slug: tools/crawler/guides/enriching-extraction-with-external-data
+---
+
+
+The data you want to include in your Algolia indices might not be present on the websites you're crawling. With Crawler, you can add External Data to your records during a crawl. Crawler accepts three External Data sources:
+- Google Analytics
+- CSVs
+- Adobe Analytics.
+
+Once you have created an External Data source, you can use it in any Crawler that has the same Application ID.
+
+## Reusing multiple times
+
+External data isn't related to one specific Crawler; it belongs to an application ID. All configurations with the same application ID can reuse the external data.
+The Crawler fetches the data independently of any crawler's configuration and handle the cache internally to make sure that data is ready whenever a crawl is scheduled.
+
+## Adding Google Analytics to your extracted records
+
+You can use Google Analytics to enrich the records you extract from your websites. If you implement search on your crawler indices, you can use the captured analytics data to improve the relevance of your search.
+
+With a little configuration, your crawler can automatically fetch Google Analytics metrics.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>
+
+## Adding CSV data to your extracted records
+
+You might need to add offline-stored data to your web-content. With Crawler, you can do this by publishing a CSV online and linking it to your crawler.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>
+
+## Adding Adobe Analytics to your extracted records
+
+You can use Adobe Analytics to enrich the records you extract from your websites. If you implement search on your crawler indices, you can use the captured analytics data to improve the relevance of your search.
+
+With a little configuration, your crawler can automatically fetch Adobe Analytics metrics.
+
+<div className="panel">
+
+{/* Partial: panel/table.haml */}
+
+</div>

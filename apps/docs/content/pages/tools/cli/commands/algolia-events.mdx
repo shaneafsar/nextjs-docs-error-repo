@@ -1,0 +1,49 @@
+---
+navigation: "cli"
+title: |-
+  algolia events
+description: |-
+  Manage your Algolia events
+slug: tools/cli/commands/algolia-events
+---
+
+## algolia events tail
+
+Tail events
+
+### Usage
+
+`algolia events tail [flags]`
+
+### Examples
+
+Tail events
+
+```sh
+algolia events tail
+```
+
+Tail events for a specific region matching the Analytics region of your application
+
+```sh
+algolia events tail -r de
+```
+
+Tail events and output them as JSON
+
+```sh
+algolia events tail --output json
+```
+
+### Output formatting flags
+
+- `--allow-missing-template-keys`: If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.
+
+- `-o`, `--output`: Output format. One of: (json, jsonpath, jsonpath-as-json, jsonpath-file).
+
+- `--template`: Template string or path to template file to use when --output=jsonpath, --output=jsonpath-file.
+
+### Flags
+
+- `-r`, `--region`: Region where your analytics data is stored and processed.
+

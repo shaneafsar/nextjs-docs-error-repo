@@ -1,0 +1,118 @@
+---
+navigation: "cli"
+
+title: |-
+  Command completion
+description: |-
+  Set up command completion so that the Algolia CLI automatically completes your commands.
+slug: tools/cli/get-started/completion
+---
+
+
+Use the `algolia completion` command to set up [command completion](https://en.wikipedia.org/wiki/Command-line_completion) for the Algolia CLI.
+After you enabled command completion,
+you can enter the first letters of a command and press the `Tab` key on your keyboard to see available commands and options.
+
+Run `algolia completion <shell> --help` for more information about enabling command completion for the Algolia CLI for your shell.
+
+
+## Setup for Homebrew
+
+If you install the Algolia CLI with Homebrew and you set up [shell completion](https://docs.brew.sh/Shell-Completion),
+you don't need to configure anything extra.
+Installing the Algolia CLI with Homebrew adds the completion functions to your environment.
+
+## Setup for Bash
+
+Command completion depends on the `bash-completion` package.
+If it isn't installed already, you can install it with a package manager.
+If you're using Homebrew, you can enter: `brew install bash-completion@2`.
+
+To enable command completion for Bash **in the current session**, run:
+
+```sh
+source <(algolia completion bash)
+```
+
+To enable command completion for Bash **for every new session**, run:
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```sh
+algolia completion bash > /etc/bash_completion.d/algolia
+```
+
+    
+    ```sh
+algolia completion bash > /usr/local/etc/bash_completion.d/algolia
+```
+
+</CodeSnippetGroup>
+
+
+
+Start a new Bash session to explore the completions.
+
+## Setup for Zsh
+
+If you didn't set up shell completion in Zsh already, run the following command to set it up:
+
+```sh
+echo "autoload -U compinit; compinit" >> ~/.zshrc
+```
+
+To enable command completion for Zsh **for every new session**, run:
+
+
+
+
+<CodeSnippetGroup>
+
+    
+    ```sh
+algolia completion zsh > "${fpath[1]}/_algolia"
+```
+
+    
+    ```sh
+algolia completion zsh > /usr/local/share/zsh/site-functions/_algolia
+```
+
+</CodeSnippetGroup>
+
+
+
+Start a new Zsh session to explore the completions.
+
+## Setup for Fish
+
+To enable command completion for Fish **in the current session**, run:
+
+```sh
+algolia completion fish | source
+```
+
+To enable command completion for Fish **for every new session**:
+
+```sh
+algolia completion fish > ~/.config/fish/completions/algolia.fish
+```
+
+Start a new Fish session to explore the completions.
+
+## Setup for PowerShell
+
+
+
+To enable command completion for PowerShell **in the current session**, run:
+
+```sh
+algolia completion powershell | Out-String | Invoke-Expression
+```
+
+To enable command completion for PowerShell **for every new session**,
+add the output of the previous command to your PowerShell profile.

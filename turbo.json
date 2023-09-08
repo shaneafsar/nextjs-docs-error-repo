@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "e2e": {
+      "cache": false
+    },
+    "playwright:install": {
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "test": {},
+    "dev": {
+      "cache": false
+    },
+    "format": {},
+    "format:check": {},
+    "precommit": {},
+    "import:specs": {
+      "dependsOn": []
+    },
+    "generate:redirects": {
+      "dependsOn": []
+    },
+    "check:sources": {
+      "dependsOn": []
+    }
+  }
+}

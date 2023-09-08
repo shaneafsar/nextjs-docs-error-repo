@@ -1,0 +1,202 @@
+---
+navigation: "cli"
+
+title: |-
+  Recipes
+description: |-
+  Examples for completing various tasks with the Algolia CLI.
+slug: tools/cli/examples/recipes
+---
+
+
+Learn how to complete various tasks with the Algolia CLI.
+
+## Install `jq` for working with JSON data
+
+The Algolia CLI works well with other command-line tools.
+For example, [`jq`](https://stedolan.github.io/jq/) is a useful tool for working with JSON data.
+
+You can install `jq` with a package manager or [download the release](https://github.com/stedolan/jq/releases/latest/) from the GitHub repository.
+
+## Input and output formats
+
+By default, these commands import and export data in newline-delimited JSON ([NDJSON](https://github.com/ndjson/ndjson-spec)) format:
+
+- 
+- 
+- 
+
+NDJSON data is formatted as one JSON object per line.
+The  command imports and exports a regular JSON object.
+
+<Callout type="info">
+  The Algolia CLI can read from NDJSON files directly.
+The Algolia dashboard expects rules, records, and synonyms as a JSON array.
+</Callout>
+
+You can convert between JSON and NDJSON with `jq`:
+
+```sh
+# Convert an NDJSON file to a JSON file with an array
+jq --slurp "." file.ndjson > file.json
+
+# Convert a JSON file (array) into an NDJSON file
+jq --compact-output '.[]' file.json > file.ndjson
+```
+
+The examples on this page use the short versions of these options,
+`-c`, `-s`.
+
+## Export to files
+
+To export your index (rules, synonyms, settings, and records) to files,
+add `>` to the command, followed by a filename.
+This can be useful to create backups of your Algolia application data.
+
+{/* Partial: tabs.haml */}
+
+Replace `<index>` with your index name
+and specify the [profile](/tools/cli/get-started/authentication/) if your index isn't in your default profile.
+
+## Import from files or standard input
+
+Use the `--file` option (`-F`) to read from an NDJSON file.
+Use `--file -` (`-F -`) to read from standard input—for example,
+the output from another command.
+
+{/* Partial: tabs.haml */}
+
+Replace `<index>` with your index name
+and specify the [profile](/tools/cli/get-started/authentication/) if your index isn't in your default profile.
+
+## Compare two index configurations
+
+To compare two index configurations, run:
+
+```sh
+diff --side-by-side \
+     --suppress-common-lines \
+     <(algolia settings get <index1> | jq) \
+     <(algolia settings get <index2> | jq)
+```
+
+Replace `<index1>` and `<index2>` with the names of the indices you want to compare,
+and [specify profiles](/tools/cli/get-started/authentication/#using-profiles)
+if your indices aren't in the default profile.
+
+## Copy indices with the Algolia CLI
+
+The Algolia CLI lets you export your records, rules, synonyms, or settings from one index and import them into another, even across profiles (different Algolia applications).
+
+To copy an index within the same Algolia application,
+you can also use the [`algolia indices copy`](/tools/cli/commands/algolia-indices/#algolia-indices-copy) command.
+
+### Copy indices between apps
+
+To copy records, rules, or synonyms between two indices, run:
+
+```sh
+algolia <command> browse <index1> -p <profile1> \
+| algolia <command> import <index2> -p <profile2> -F -
+```
+
+- Replace `<command>` with `rules`, `synonyms`, or `objects`.
+- Replace `<index1>` and `<profile1>` with the index and [profile name](/tools/cli/get-started/authentication/#using-profiles) **from** which you want to copy.
+- Replace `<index2>` and `<profile2>` with the index and profile name **to** which you want to copy.
+
+To copy settings between two indices, run:
+
+```sh
+algolia settings get <index1> -p <profile1> \
+| algolia settings import <index2> -p <profile2> -F -
+```
+
+### Copy only some index settings
+
+To copy the index settings, except the [`queryLanguages`](/api-reference/api-parameters/queryLanguages) and [`indexLanguages`](/api-reference/api-parameters/indexLanguages) settings, run:
+
+```sh
+algolia settings get <source-index> \
+| jq 'del(.queryLanguages,.indexLanguages)' \
+| algolia settings import <destination-index> -F -
+```
+
+Replace `<source-index>` and `<destination-index>` with your index names
+and [specify profiles](/tools/cli/get-started/authentication/)
+if your indices aren't in the default profile.
+
+You can then use the [`algolia settings set`](/tools/cli/commands/algolia-settings/#algolia-settings-set) command to add or change the settings:
+
+```sh
+algolia settings set <destination-index> \
+  --queryLanguages "..." \
+  --indexLanguages "..."
+```
+
+
+
+### Change settings while copying
+
+
+
+With `jq`, you can also change the settings while copying them between indices.
+For example, to set the query and indexing language to French:
+
+```sh
+algolia settings get <source-index> \
+| jq '.queryLanguages=["fr"],.indexLanguages=["fr"]' \
+| algolia settings import <destination-index> -F -
+```
+
+Replace `<source-index>` and `<destination-index>` with your index names
+and [specify profiles](/tools/cli/get-started/authentication/)
+if your indices aren't in the default profile.
+
+### Copy indices with replicas
+
+Copying an index with the [`algolia indices copy`](/tools/cli/commands/algolia-indices/#algolia-indices-copy) command **does not** copy the replicas of the original index.
+
+To create a copy of an index, including its replicas, copy the indices separately and set the replica with the [`algolia settings set`](/tools/cli/commands/algolia-settings/#algolia-settings-set) command:
+
+```sh
+# Copy the primary index
+algolia index copy <index> <index-copy>
+
+# Copy the replica index
+algolia index copy <replica-index> <replica-index-copy>
+
+# Set the copy as replica index
+algolia settings set <index-copy> --replicas <replica-index-copy>
+```
+
+Replace `<index>`, `<index-copy>`, `<replica-index>`, and `<replica-index-copy>` with your index names
+and [specify profiles](/tools/cli/get-started/authentication/)
+if your indices aren't in the default profile.
+
+## Find and filter records with missing attributes
+
+To find records with missing attributes, use the [`algolia objects browse`](/tools/cli/commands/algolia-objects/#algolia-objects-browse) command and filter the results with `jq`. For example, to get the object IDs for records without a `name` attribute, run the following command:
+
+```sh
+algolia objects browse <index> --attributesToRetrieve "name" \
+| jq -rs 'map(select(has("name") | not) .objectID)'
+```
+
+The [`attributesToRetrieve`](/api-reference/api-parameters/attributesToRetrieve) option limits the attributes included in the response from the Algolia API to just the `name` attribute.
+The `jq` command first selects all elements without a `name` attribute and then returns a list of `objectID` values.
+You can turn this into a comma-separated list by appending `| join(",")` to the `jq` command.
+
+For example, to **delete records with a missing attribute** from an index,
+you can run these two commands:
+
+```sh
+records_to_delete=$(
+  algolia objects browse <index> --attributesToRetrieve "name" \
+  | jq -rs 'map(select(has("name") | not) .objectID) | join(",")'
+)
+algolia objects delete --object-ids ${records_to_delete}
+```
+
+<Callout type="info">
+  For more information, check the [`jq` documentation](https://stedolan.github.io/jq/manual/).
+</Callout>

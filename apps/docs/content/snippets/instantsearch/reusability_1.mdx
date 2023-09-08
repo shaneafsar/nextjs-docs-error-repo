@@ -1,0 +1,387 @@
+
+### Exposing standard classes
+
+  Widgets expose classes on every DOM element to help users style them easily.
+
+  Built-in InstantSearch widgets use the [SUITCSS](https://github.com/suitcss/suit/blob/master/doc/naming-conventions.md#components) component syntax:
+
+  ```txt*
+  [<namespace>-]<ComponentName>[-descendentName][--modifierName]
+  ```
+
+  - **Every class starts with the `ais-` namespace** (for Algolia InstantSearch). This helps target all InstantSearch elements with selectors like `[class^="ais-"]`.
+  - **Every class has a component name mapped to the widget name.** In the example on this page, the widget uses the `NegativeRefinementList` component name. Component names are always in [Pascal case](https://en.wiktionary.org/wiki/Pascal_case).
+  - Since every element has its own classes, **they must be identified with a "descendent name".** In the example on this page, each item of the widget uses the `-item` descendent name. Descendent names are always in camel case.
+  - If an element has multiple states, **identify each state with a "modifier".** In the example on this page, the selected item of the widget uses the `--selected` modifier. Modifiers are always in camel case and prefixed with two hyphens. You should include the modified class on the element _in addition_ to the base component class (for example, `ais-NegativeRefinementList-item` and `ais-NegativeRefinementList-item--selected`).
+
+  <Callout>
+  See these conventions [in action](#rendering-a-custom-user-interface).
+  </Callout>
+
+  If you're using a CSS linter like [Stylelint](https://stylelint.io/), you can validate your InstantSearch classes with the following regular expression:
+
+  ```txt*
+  ^ais-(?:[A-Z][a-z]+)+(?:-[a-z]+(?:[A-Z][a-z]+)*)?(?:--[a-z]+(?:[A-Z][a-z]+)*)?$
+  ```
+
+  ### Passing custom classes
+
+  Widgets expose [standardized class names](#exposing-standard-classes) to let users write custom CSS, but you could even open the styling API further to allow passing classes directly on each element. This lets users of class-based CSS frameworks like [Bootstrap](https://getbootstrap.com/) or [Tailwind CSS](https://tailwindcss.com/) leverage them without friction or workarounds.
+
+  In built-in widgets, the convention is to provide a prop that takes an object of named classes.
+
+  <CodeSnippetGroup>
+    ```jsx title="JavaScript (Preact)"
+    function createNegativeRefinementListRenderer({ container, cssClasses = {} }) {
+      // …
+
+      return {
+        render({ items, refine, canRefine }) {
+          preactRender(
+            html`
+              <div
+                class="${cx(
+                  'ais-NegativeRefinementList',
+                  cssClasses.root,
+                  !canRefine &&
+                    cx(
+                      'ais-NegativeRefinementList--noRefinement',
+                      cssClasses.noRefinementRoot
+                    )
+                )}"
+              >
+                <ul class="${cx(
+                  'ais-NegativeRefinementList-list',
+                  cssClasses.list
+                )}">
+                  ${items
+                    .map(
+                      (item) => html`<li
+                        class="${cx(
+                          'ais-NegativeRefinementList-item',
+                          cssClasses.item,
+                          item.isExcluded &&
+                            cx(
+                              'ais-NegativeRefinementList-item--selected',
+                              cssClasses.selectedItem
+                            )
+                        )}"
+                      >
+                        <label class="${cx(
+                          'ais-NegativeRefinementList-label',
+                          cssClasses.label
+                        )}">
+                          <input
+                            checked="${item.isExcluded}"
+                            type="checkbox"
+                            class="${cx(
+                              'ais-NegativeRefinementList-checkbox',
+                              cssClasses.checkbox
+                            )}"
+                            value="${item.name}"
+                            onChange="${(event) => {
+                              event.preventDefault();
+                              refine(item.name);
+                            }}"
+                          />
+                          <span class="${cx(
+                            'ais-NegativeRefinementList-labelText',
+                            cssClasses.labelText
+                          )}"
+                            >${item.name}</span
+                          >
+                          <span class="${cx(
+                            'ais-NegativeRefinementList-count',
+                            cssClasses.count
+                          )}"
+                            >${item.count}</span
+                          > </label
+                        >$
+                      </li>`
+                    )
+                    .join('')}
+                </ul>
+              </div>
+            `,
+            containerNode
+          );
+
+          // …
+        },
+        // …
+      };
+    }
+    ```
+
+    ```jsx title="JavaScript (DOM API)"
+    function createNegativeRefinementListRenderer({ container, cssClasses = {} }) {
+      // …
+
+      return {
+        render({ items, refine, canRefine }) {
+          containerNode.innerHTML = `
+            <div class="${cx(
+              'ais-NegativeRefinementList',
+              cssClasses.root,
+              !canRefine &&
+                cx(
+                  'ais-NegativeRefinementList--noRefinement',
+                  cssClasses.noRefinementRoot
+                )
+            )}">
+              <ul class="${cx('ais-NegativeRefinementList-list', cssClasses.list)}">
+              ${items
+                .map(
+                  (item) => `
+                <li class="${cx(
+                  'ais-NegativeRefinementList-item',
+                  cssClasses.item,
+                  item.isExcluded &&
+                    cx(
+                      'ais-NegativeRefinementList-item--selected',
+                      cssClasses.selectedItem
+                    )
+                )}">
+                  <label class="${cx(
+                    'ais-NegativeRefinementList-label',
+                    cssClasses.label
+                  )}">
+                    <input
+                      checked="${item.isExcluded}"
+                      type="checkbox"
+                      class="${cx(
+                        'ais-NegativeRefinementList-checkbox',
+                        cssClasses.checkbox
+                      )}"
+                      value="${item.name}"
+                    />
+                    <span class="${cx(
+                      'ais-NegativeRefinementList-labelText',
+                      cssClasses.labelText
+                    )}">${item.name}</span>
+                    <span class="${cx(
+                      'ais-NegativeRefinementList-count',
+                      cssClasses.count
+                    )}">${item.count}</span>
+                  </label>$
+                </li>
+              `
+                )
+                .join('')}
+              </ul>
+            </div>
+          `;
+
+          // …
+        },
+        // …
+      };
+    }
+    ```
+
+    ```tsx title="TypeScript (Preact)"
+    type NegativeRefinementListClassNames = {
+      root: string,
+      noRefinementRoot: string,
+      list: string,
+      item: string,
+      selectedItem: string,
+      label: string,
+      checkbox: string,
+      labelText: string,
+      count: string,
+    };
+
+    type NegativeRefinementListWidgetParams = {
+      container: string | HTMLElement,
+      cssClasses?: Partial<NegativeRefinementListClassNames>,
+    };
+
+    type NegativeRefinementListRendererFactory = {
+      // …
+    };
+
+    const createNegativeRefinementListRenderer: NegativeRefinementListRendererFactory =
+      ({ container, cssClasses = {} }) => {
+        // …
+
+        return {
+          render({ items, refine, canRefine }) {
+            preactRender(
+              html`
+                <div
+                  class="${cx(
+                    'ais-NegativeRefinementList',
+                    cssClasses.root,
+                    !canRefine &&
+                      cx(
+                        'ais-NegativeRefinementList--noRefinement',
+                        cssClasses.noRefinementRoot
+                      )
+                  )}"
+                >
+                  <ul
+                    class="${cx(
+                      'ais-NegativeRefinementList-list',
+                      cssClasses.list
+                    )}"
+                  >
+                    ${items
+                      .map(
+                        (item) => html`<li
+                          class="${cx(
+                            'ais-NegativeRefinementList-item',
+                            cssClasses.item,
+                            item.isExcluded &&
+                              cx(
+                                'ais-NegativeRefinementList-item--selected',
+                                cssClasses.selectedItem
+                              )
+                          )}"
+                        >
+                          <label
+                            class="${cx(
+                              'ais-NegativeRefinementList-label',
+                              cssClasses.label
+                            )}"
+                          >
+                            <input
+                              checked="${item.isExcluded}"
+                              type="checkbox"
+                              class="${cx(
+                                'ais-NegativeRefinementList-checkbox',
+                                cssClasses.checkbox
+                              )}"
+                              value="${item.name}"
+                              onChange="${(event) => {
+                                event.preventDefault();
+                                refine(item.name);
+                              }}"
+                            />
+                            <span
+                              class="${cx(
+                                'ais-NegativeRefinementList-labelText',
+                                cssClasses.labelText
+                              )}"
+                              >${item.name}</span
+                            >
+                            <span
+                              class="${cx(
+                                'ais-NegativeRefinementList-count',
+                                cssClasses.count
+                              )}"
+                              >${item.count}</span
+                            > </label
+                          >$
+                        </li>`
+                      )
+                      .join('')}
+                  </ul>
+                </div>
+              `,
+              containerNode
+            );
+
+            // …
+          },
+          // …
+        };
+      };
+    ```
+
+    ```tsx title="TypeScript (DOM API)"
+    type NegativeRefinementListClassNames = {
+      root: string,
+      noRefinementRoot: string,
+      list: string,
+      item: string,
+      selectedItem: string,
+      label: string,
+      checkbox: string,
+      labelText: string,
+      count: string,
+    };
+
+    type NegativeRefinementListWidgetParams = {
+      container: string | HTMLElement,
+      cssClasses?: Partial<NegativeRefinementListClassNames>,
+    };
+
+    type NegativeRefinementListRendererFactory = {
+      // …
+    };
+
+    const createNegativeRefinementListRenderer: NegativeRefinementListRendererFactory =
+      ({ container, cssClasses = {} }) => {
+        // …
+
+        return {
+          render({ items, refine, canRefine }) {
+            containerNode.innerHTML = `
+                <div class="${cx(
+                  'ais-NegativeRefinementList',
+                  cssClasses.root,
+                  !canRefine &&
+                    cx(
+                      'ais-NegativeRefinementList--noRefinement',
+                      cssClasses.noRefinementRoot
+                    )
+                )}">
+                  <ul class="${cx(
+                    'ais-NegativeRefinementList-list',
+                    cssClasses.list
+                  )}">
+                  ${items
+                    .map(
+                      (item) => `
+                    <li class="${cx(
+                      'ais-NegativeRefinementList-item',
+                      cssClasses.item,
+                      item.isExcluded &&
+                        cx(
+                          'ais-NegativeRefinementList-item--selected',
+                          cssClasses.selectedItem
+                        )
+                    )}">
+                      <label class="${cx(
+                        'ais-NegativeRefinementList-label',
+                        cssClasses.label
+                      )}">
+                        <input
+                          checked="${item.isExcluded}"
+                          type="checkbox"
+                          class="${cx(
+                            'ais-NegativeRefinementList-checkbox',
+                            cssClasses.checkbox
+                          )}"
+                          value="${item.name}"
+                        />
+                        <span class="${cx(
+                          'ais-NegativeRefinementList-labelText',
+                          cssClasses.labelText
+                        )}">${item.name}</span>
+                        <span class="${cx(
+                          'ais-NegativeRefinementList-count',
+                          cssClasses.count
+                        )}">${item.count}</span>
+                      </label>$
+                    </li>
+                  `
+                    )
+                    .join('')}
+                  </ul>
+                </div>
+              `;
+
+            // …
+          },
+          // …
+        };
+      };
+    ```
+
+  </CodeSnippetGroup>
+
+  ### Customizing the UI
+
+  **UI customizability is an important aspect of building reusable InstantSearch widgets.**  If you need to internationalize your app, control the markup, or change icons, you shouldn't have to opt out of using widgets and resort to using connectors just to tweak the UI.

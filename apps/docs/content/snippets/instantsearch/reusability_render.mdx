@@ -1,0 +1,73 @@
+
+  <CodeSnippetGroup>
+    ```js title="JavaScript"
+    function negativeRefinementList(params) {
+      const { container, attribute, ...connectorParams } = params;
+      const { render, dispose } = createNegativeRefinementListRenderer({
+        container,
+      });
+
+      const createWidget = connectNegativeRefinementList(render, dispose);
+
+      return {
+        ...createWidget(connectorParams),
+        // This is helpful for debugging purposes and allows to differentiate
+        // between the connector and the widget.
+        $$widgetType: 'myOrganization.negativeRefinementList',
+      };
+    }
+    ```
+
+    ```ts title="TypeScript"
+    import { WidgetFactory, WidgetRenderState } from 'instantsearch.js';
+
+    type NegativeRefinementListWidgetDescription = {
+      $$type: 'myOrganization.negativeRefinementList',
+      renderState: NegativeRefinementListRenderState,
+      indexRenderState: {
+        negativeRefinementList: {
+          [attribute: string]: WidgetRenderState<
+            NegativeRefinementListRenderState,
+            NegativeRefinementListConnectorParams
+          >,
+        },
+      },
+      indexUiState: {
+        negativeRefinementList: {
+          [attribute: string]: string[],
+        },
+      },
+    };
+
+    type NegativeRefinementListWidget = WidgetFactory<
+      NegativeRefinementListWidgetDescription & {
+        $$widgetType: 'myOrganization.negativeRefinementList',
+      },
+      NegativeRefinementListConnectorParams,
+      NegativeRefinementListWidgetParams
+    >;
+
+    function negativeRefinementList(params: NegativeRefinementListParams) {
+      const { container, attribute, ...connectorParams } = params;
+      const { render, dispose } = createNegativeRefinementListRenderer({
+        container,
+      });
+
+      const createWidget = connectNegativeRefinementList(render, dispose);
+
+      return {
+        ...createWidget(connectorParams),
+        // This is helpful for debugging purposes and allows to differentiate
+        // between the connector and the widget.
+        $$widgetType: 'myOrganization.negativeRefinementList',
+      };
+    }
+    ```
+
+  </CodeSnippetGroup>
+
+  <Callout type="info">
+  InstantSearch widgets use a [standardized class naming convention](#exposing-standard-classes).
+  </Callout>
+
+  The widget is now [usable in an InstantSearch application](/#using-the-custom-widget). Still, if you want to reuse or distribute the widget, you can [further tweak the API](/#making-the-widget-reusable) to use the same standards as the built-in <Var type="language" /> widgets.
