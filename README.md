@@ -1,9 +1,3 @@
-<h1 align="center">
-  <img alt="cgapp logo" src="./README_logo.svg" width="224px"/><br/>
-</h1>
-<p align="center">
-    Official <a href="https://www.algolia.com/doc-beta" target="_blank">Algolia documentation website</a>
-</p>
 
 <p align="center">
     <a href="https://nextjs.org/docs"
