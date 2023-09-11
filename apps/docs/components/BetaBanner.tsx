@@ -14,11 +14,7 @@ export default function BetaBanner({ className = "" }: Props) {
         className
       )}
     >
-      You&apos;re visiting the public beta of Algolia&apos;s new docs! Find the existing
-      docs at
-      <span className="ml-1 inline-block text-xenon-300 group-hover:underline dark:text-xenon-700">
-        algolia.com/doc
-      </span>
+      Client-side error repo test
     </Link>
   );
 }
