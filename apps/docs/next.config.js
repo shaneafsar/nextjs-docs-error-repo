@@ -13,9 +13,6 @@ const nextConfig = {
     serverComponentsExternalPackages: ["shiki", "vscode-oniguruma"],
   },
   skipMiddlewareUrlNormalize: true,
-  sentry: {
-    hideSourceMaps: false,
-  },
   images: {
     remotePatterns: [
       {
