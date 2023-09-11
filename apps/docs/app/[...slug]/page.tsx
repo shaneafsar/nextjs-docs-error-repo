@@ -19,7 +19,7 @@ interface DocPageProps {
 }
 
 // for info visit: https://nextjs.org/docs/messages/app-static-to-dynamic-error
-export const dynamic = "force-static";
+// export const dynamic = "force-static";
 
 const publishedDocs = allDocs.filter((doc) => !doc.unpublished);
 

@@ -8,7 +8,7 @@ import { allApis, allMethods } from "contentlayer/generated";
 import { Metadata } from "next";
 import { paramCase } from "param-case";
 
-export const dynamic = "force-static";
+//export const dynamic = "force-static";
 
 const publishedApis = allApis.filter((api) => !api.unpublished);
 
